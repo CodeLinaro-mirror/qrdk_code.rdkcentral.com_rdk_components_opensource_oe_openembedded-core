@@ -24,6 +24,8 @@ SRC_URI = "git://uclibc.org/uClibc.git;branch=master \
 	file://0001-Add-eventfd_read-and-eventfd_write.patch \
 	file://0002-wire-setns-syscall.patch \
 	file://0003-fcntl.h-Define-F_SETPIPE_SZ-and-F_GETPIPE_SZ.patch \
-        file://0004-Add-clock_adjtime-syscall.patch \ 
+        file://0004-Add-clock_adjtime-syscall.patch \
+	file://0001-Define-IPTOS_CLASS_-macros-according-to-RFC-2474.patch \
+	file://0001-timex-Sync-with-glibc.patch \
 	"
 S = "${WORKDIR}/git"
