@@ -12,7 +12,6 @@ DEPENDS = "glib-2.0 libxml2 bison-native flex-native"
 PR = "r2"
 
 SRC_URI = "http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-${PV}.tar.bz2 \
-           file://check_fix.patch \
            file://gst-inspect-check-error.patch"
 
 SRC_URI[md5sum] = "a0cf7d6877f694a1a2ad2b4d1ecb890b"
@@ -22,7 +21,7 @@ inherit autotools pkgconfig gettext
 
 GSTREAMER_DEBUG ?= "--disable-debug"
 EXTRA_OECONF = "--disable-docbook --disable-gtk-doc \
-            --disable-dependency-tracking --disable-check \
+            --disable-dependency-tracking \
             --disable-examples --disable-tests \
             --disable-valgrind ${GSTREAMER_DEBUG} \
             "
