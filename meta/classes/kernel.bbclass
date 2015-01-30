@@ -336,6 +336,11 @@ do_savedefconfig() {
 do_savedefconfig[nostamp] = "1"
 addtask savedefconfig after do_configure
 
+do_shared_workdir () {
+	:
+}
+addtask shared_workdir after do_compile before do_install
+
 inherit cml1
 
 EXPORT_FUNCTIONS do_compile do_install do_configure
