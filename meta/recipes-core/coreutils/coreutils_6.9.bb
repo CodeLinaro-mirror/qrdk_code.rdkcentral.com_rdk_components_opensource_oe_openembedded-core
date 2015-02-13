@@ -41,7 +41,7 @@ PACKAGECONFIG_class-native ??= ""
 
 # with, without, depends, rdepends
 #
-PACKAGECONFIG[acl] = "--enable-acl,--disable-acl,acl,"
+PACKAGECONFIG[acl] = "ac_cv_header_sys_acl_h=yes,ac_cv_header_sys_acl_h=no,acl,"
 
 
 # [ gets a special treatment and is not included in this
