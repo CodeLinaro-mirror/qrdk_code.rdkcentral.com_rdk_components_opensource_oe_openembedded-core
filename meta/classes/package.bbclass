@@ -264,7 +264,7 @@ def splitdebuginfo(file, debugfile, debugsrcdir, sourcefile, d):
 
     # We need to extract the debug src information here...
     if debugsrcdir:
-        cmd = "'%s' -b '%s' -d '%s' -i -l '%s' '%s'" % (debugedit, workparentdir, debugsrcdir, sourcefile, file)
+        cmd = "'%s' -b '%s' -d '%s' -l '%s' '%s'" % (debugedit, workparentdir, debugsrcdir, sourcefile, file)
         (retval, output) = oe.utils.getstatusoutput(cmd)
         if retval:
             bb.fatal("debugedit failed with exit code %s (cmd was %s)%s" % (retval, cmd, ":\n%s" % output if output else ""))
