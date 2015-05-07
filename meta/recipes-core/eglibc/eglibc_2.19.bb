@@ -1,5 +1,7 @@
 require eglibc.inc
 
+INHIBIT_SYSROOT_STRIP = "1"
+
 DEPENDS += "gperf-native kconfig-frontends-native"
 
 SRC_URI = "http://downloads.yoctoproject.org/releases/eglibc/eglibc-${PV}-svnr25243.tar.bz2 \
