@@ -266,6 +266,18 @@ autotools_do_install() {
 	fi
 }
 
+# in cases of where ${S} != ${B}, just cleaning the tmp/work area is not sufficient.
+# Some stray .lo will be present in the Source area which needs to be cleaned up.
+# This case appears while using the external sources.
+autotools_clean () {
+	if [ "${S}" != "${B}" ]; then
+        	if [ -f Makefile ] ; then
+                	oe_runmake clean
+        	fi
+	fi
+}
+do_clean[prefuncs] += "autotools_clean"
+
 inherit siteconfig
 
-EXPORT_FUNCTIONS do_configure do_install
+EXPORT_FUNCTIONS do_configure do_install do_clean
