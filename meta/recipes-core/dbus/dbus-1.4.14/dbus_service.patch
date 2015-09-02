@@ -1,0 +1,15 @@
+--- dbus-1.4.14/bus/dbus.service.in	2011-06-10 22:43:42.000000000 +0000
++++ dbus.service	2015-09-02 12:14:12.034914838 +0000
+@@ -1,11 +1,7 @@
+ [Unit]
+ Description=D-Bus System Message Bus
+-Requires=dbus.socket
+ After=syslog.target
+ 
+ [Service]
+-ExecStartPre=@EXPANDED_BINDIR@/dbus-uuidgen --ensure
+-ExecStartPre=-/bin/rm -f @DBUS_SYSTEM_PID_FILE@
+-ExecStart=@EXPANDED_BINDIR@/dbus-daemon --system --address=systemd: --nofork --systemd-activation
+-ExecReload=@EXPANDED_BINDIR@/dbus-send --print-reply --system --type=method_call --dest=org.freedesktop.DBus / org.freedesktop.DBus.ReloadConfig
++ExecStart= /usr/bin/dbus-daemon --config-file=/basic.conf  --nofork 
+ OOMScoreAdjust=-900
