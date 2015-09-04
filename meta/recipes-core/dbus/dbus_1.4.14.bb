@@ -43,7 +43,7 @@ CONFFILES_${PN} = "${sysconfdir}/dbus-1/system.conf ${sysconfdir}/dbus-1/session
 
 DEBIANNAME_${PN} = "dbus-1"
 
-PACKAGES =+ "${PN}-lib ${PN}-systemd"
+PACKAGES =+ "${PN}-lib"
 
 OLDPKGNAME = "dbus-x11"
 OLDPKGNAME_class-nativesdk = ""
@@ -52,7 +52,6 @@ OLDPKGNAME_class-nativesdk = ""
 RPROVIDES_${PN} = "${OLDPKGNAME}"
 RREPLACES_${PN} += "${OLDPKGNAME}"
 
-FILES_${PN}-systemd = "${systemd_unitdir}/system/"
 
 FILES_${PN} = "${bindir}/dbus-daemon* \
                ${bindir}/dbus-uuidgen \
@@ -64,7 +63,8 @@ FILES_${PN} = "${bindir}/dbus-daemon* \
                ${sysconfdir} \
                ${localstatedir} \
                ${datadir}/dbus-1/services \
-               ${datadir}/dbus-1/system-services" 
+               ${datadir}/dbus-1/system-services \
+               ${systemd_unitdir}/system" 
 
 FILES_${PN}_append_qemux86broadband += "${includedir}/dbus-1.0/dbus"
 FILES_${PN}-lib = "${libdir}/lib*.so.*"
