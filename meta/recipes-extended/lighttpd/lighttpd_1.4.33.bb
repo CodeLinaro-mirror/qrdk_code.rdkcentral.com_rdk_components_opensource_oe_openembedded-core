@@ -66,6 +66,10 @@ do_install_append() {
 
 FILES_${PN} += "${sysconfdir} /www"
 
+FILES_${PN} += " \
+    ${libdir}/mod_fastcgi.so \
+"
+
 CONFFILES_${PN} = "${sysconfdir}/lighttpd.conf"
 
 PACKAGES_DYNAMIC += "^lighttpd-module-.*"
