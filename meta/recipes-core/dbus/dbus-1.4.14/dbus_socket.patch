@@ -1,0 +1,8 @@
+--- dbus-1.4.14/bus/dbus.socket.in	2011-06-10 22:43:42.000000000 +0000
++++ dbus.socket	2015-09-07 12:37:48.273135732 +0000
+@@ -2,4 +2,4 @@
+ Description=D-Bus System Message Bus Socket
+ 
+ [Socket]
+-ListenStream=@DBUS_SYSTEM_SOCKET@
++ListenStream=/tmp/ccsp_bus_socket

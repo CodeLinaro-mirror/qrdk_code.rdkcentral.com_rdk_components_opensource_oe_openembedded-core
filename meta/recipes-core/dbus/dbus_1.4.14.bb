@@ -18,6 +18,7 @@ SRC_URI = "http://dbus.freedesktop.org/releases/dbus/dbus-${PV}.tar.gz \
 "
 
 SRC_URI_append_qemux86broadband +="file://dbus_service.patch \
+                                   file://dbus_socket.patch \
 "
 
 SRC_URI[md5sum] = "ae6de2562a57516cfabaf56903375ba9"
