@@ -15,10 +15,8 @@ RDEPENDS_dbus-ptest_class-target = "dbus-test-ptest"
 
 SRC_URI = "http://dbus.freedesktop.org/releases/dbus/dbus-${PV}.tar.gz \
 	   file://01-compile_in_dbus_mainloop.patch \
-"
-
-SRC_URI_append_qemux86broadband +="file://dbus_service.patch \
-                                   file://dbus_socket.patch \
+           file://dbus_service.patch \
+           file://dbus_socket.patch \
 "
 
 SRC_URI[md5sum] = "ae6de2562a57516cfabaf56903375ba9"
@@ -65,9 +63,8 @@ FILES_${PN} = "${bindir}/dbus-daemon* \
                ${localstatedir} \
                ${datadir}/dbus-1/services \
                ${datadir}/dbus-1/system-services \
-               ${systemd_unitdir}/system" 
+               ${systemd_unitdir}/system"
 
-FILES_${PN}_append_qemux86broadband += "${includedir}/dbus-1.0/dbus"
 FILES_${PN}-lib = "${libdir}/lib*.so.*"
 RRECOMMENDS_${PN}-lib = "${PN}"
 FILES_${PN}-dev += "${libdir}/dbus-1.0/include ${bindir}/dbus-glib-tool"
@@ -96,7 +93,7 @@ EXTRA_OECONF = "--disable-tests \
                 --enable-verbose-mode \
                 --with-pic=yes"
 
-do_install_append_qemux86broadband() {
+do_install_append() {
     install -d ${D}/usr/include/dbus-1.0/dbus
     install -m 644 ${WORKDIR}/dbus-${PV}/dbus/*.h ${D}/usr/include/dbus-1.0/dbus
 }
@@ -153,7 +150,7 @@ do_install_class-native() {
 
 	# dbus-glib-native and dbus-glib need this xml file
 	./bus/dbus-daemon --introspect > ${STAGING_DATADIR_NATIVE}/dbus/dbus-bus-introspect.xml
-	
+
 	# dbus-launch has no X support so lets not install it in case the host
 	# has a more featured and useful version
 	rm -f ${D}${bindir}/dbus-launch
