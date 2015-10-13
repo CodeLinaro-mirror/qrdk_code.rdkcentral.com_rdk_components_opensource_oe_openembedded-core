@@ -12,7 +12,7 @@ LIC_FILES_CHKSUM = "file://COPYING.FDL;md5=ad1419ecc56e060eccf8184a87c4285f \
                     file://src/plugin_common/all.h;beginline=1;endline=18;md5=e33e281151e7f40db2d3d170d9b0c1bb \
                     file://COPYING.Xiph;md5=755582d124a03e3001afea59fc02b61b \
                     file://include/FLAC/all.h;beginline=65;endline=70;md5=64474f2b22e9e77b28d8b8b25c983a48"
-DEPENDS = "libogg"
+DEPENDS = "libogg virtual/libiconv"
 
 SRC_URI = "http://downloads.xiph.org/releases/flac/${BP}.tar.xz \
            file://0001-Fix-Makefile.am-altivec-logic.patch \
