@@ -33,6 +33,9 @@ PARALLEL_MAKE = ""
 inherit autotools
 
 EXTRA_OECONF += "--without-lisp --disable-csharp --disable-openmp --without-emacs"
+# get all posix_* functions from uclibc advanced real-time support library
+LDFLAGS_append_libc-uclibc = " -lrt"
+
 acpaths = '-I ${S}/autoconf-lib-link/m4/ \
            -I ${S}/gettext-runtime/m4 \
            -I ${S}/gettext-tools/m4'
