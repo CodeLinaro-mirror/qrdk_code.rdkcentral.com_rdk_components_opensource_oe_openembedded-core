@@ -27,5 +27,6 @@ SRC_URI = "git://uclibc.org/uClibc.git;branch=master \
         file://0004-Add-clock_adjtime-syscall.patch \
 	file://0001-Define-IPTOS_CLASS_-macros-according-to-RFC-2474.patch \
 	file://0001-timex-Sync-with-glibc.patch \
+	file://0001-bits-time.h-sync-with-latest-glibc.patch \
 	"
 S = "${WORKDIR}/git"
