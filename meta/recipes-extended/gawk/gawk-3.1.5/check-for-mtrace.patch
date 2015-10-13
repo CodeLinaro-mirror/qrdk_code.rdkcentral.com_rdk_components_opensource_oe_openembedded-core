@@ -1,0 +1,23 @@
+Check for mtrace and not for mcheck.h which may be there but does not mean that mtrace() is supported
+
+Upstream-Status: Already fixed in 3.1.6
+
+Signed-off-by: Khem Raj <raj.khem@gmail.com>
+
+Index: gawk-3.1.5/main.c
+===================================================================
+--- gawk-3.1.5.orig/main.c
++++ gawk-3.1.5/main.c
+@@ -226,10 +226,10 @@ main(int argc, char **argv)
+ 	if (getenv("WHINY_USERS") != NULL)
+ 		whiny_users = TRUE;
+ 
+-#ifdef HAVE_MCHECK_H
++#ifdef HAVE_MTRACE
+ 	if (do_tidy_mem)
+ 		mtrace();
+-#endif /* HAVE_MCHECK_H */
++#endif /* HAVE_MTRACE */
+ 	
+ #if defined(LC_CTYPE)
+ 	setlocale(LC_CTYPE, "");
