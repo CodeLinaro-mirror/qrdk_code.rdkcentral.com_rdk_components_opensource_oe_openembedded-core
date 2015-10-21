@@ -23,6 +23,15 @@ def get_kernelversion(p):
         if m:
             return m.group(1)
     return None
+def get_kernelversion_file(p):
+    fn = p + '/kernel-abiversion'
+
+    try:
+        with open(fn, 'r') as f:
+            return f.readlines()[0].strip()
+    except IOError:
+        return None
+
 
 def linux_module_packages(s, d):
 	suffix = ""
