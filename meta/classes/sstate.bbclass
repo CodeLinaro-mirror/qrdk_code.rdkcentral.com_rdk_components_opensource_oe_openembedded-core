@@ -550,7 +550,7 @@ def pstaging_fetch(sstatefetch, sstatepkg, d):
         localdata.setVar('SRC_URI', srcuri)
         try:
             fetcher = bb.fetch2.Fetch([srcuri], localdata, cache=False)
-            fetcher.download()
+            fetcher.download(warn_only = True)
 
             # Need to optimise this, if using file:// urls, the fetcher just changes the local path
             # For now work around by symlinking
