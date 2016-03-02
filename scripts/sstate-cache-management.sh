@@ -251,14 +251,14 @@ remove_duplicated () {
                   grep -h ".*/sstate:$fn:[^:]*:[^:]*:[^:]*:$arch:[^:]*:[^:]*\.${ext}$" $list_suffix >$fn_tmp
                   if [ -s $fn_tmp ] ; then
                       [ $debug -gt 1 ] && echo "Available files for $fn-$arch- with suffix $suffix.${ext}:" && cat $fn_tmp
-                      # Use the modification time
-                      to_del=$(ls -t $(cat $fn_tmp) | sed -n '1!p')
+                      # Use teh access time
+                      to_del=$(ls -u $(cat $fn_tmp) | sed -n '1!p')
                       [ $debug -gt 2 ] && echo "Considering to delete: $to_del"
                       # The sstate file which is downloaded from the SSTATE_MIRROR is
                       # put in SSTATE_DIR, and there is a symlink in SSTATE_DIR/??/ to
                       # it, so filter it out from the remove list if it should not be
                       # removed.
-                      to_keep=$(ls -t $(cat $fn_tmp) | sed -n '1p')
+                      to_keep=$(ls -u $(cat $fn_tmp) | sed -n '1p')
                       [ $debug -gt 2 ] && echo "Considering to keep: $to_keep"
                       for k in $to_keep; do
                           if [ -L "$k" ]; then
