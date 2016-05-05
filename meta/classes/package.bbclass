@@ -237,6 +237,33 @@ python () {
         d.appendVarFlag('do_package', 'deptask', " do_packagedata")
 }
 
+# Get a list of files from file vars by searching files under current working directory
+# The list contains symlinks, directories and normal files.
+def files_from_filevars(filevars):
+    import os,glob
+    cpath = oe.cachedpath.CachedPath()
+    files = []
+    for f in filevars:
+        if os.path.isabs(f):
+            f = '.' + f
+        if not f.startswith("./"):
+            f = './' + f
+        globbed = glob.glob(f)
+        if globbed:
+            if [ f ] != globbed:
+                files += globbed
+                continue
+        files.append(f)
+
+    for f in files:
+        if not cpath.islink(f):
+            if cpath.isdir(f):
+                newfiles = [ os.path.join(f,x) for x in os.listdir(f) ]
+                if newfiles:
+                    files += newfiles
+
+    return files
+
 def splitdebuginfo(file, debugfile, debugsrcdir, sourcefile, d):
     # Function to split a single file into two components, one is the stripped
     # target system binary, the other contains any debugging information. The
@@ -952,18 +979,19 @@ python populate_packages () {
 
     bb.utils.mkdirhier(outdir)
     os.chdir(dvar)
+    
+    autodebug = not (d.getVar("NOAUTOPACKAGEDEBUG", True) or False)
 
-    # Sanity check PACKAGES for duplicates and for LICENSE_EXCLUSION
+    # Sanity check PACKAGES for duplicates
     # Sanity should be moved to sanity.bbclass once we have the infrastucture
     package_list = []
 
     for pkg in packages.split():
-        if d.getVar('LICENSE_EXCLUSION-' + pkg, True):
-            msg = "%s has an incompatible license. Excluding from packaging." % pkg
-            package_qa_handle_error("incompatible-license", msg, d)
         if pkg in package_list:
             msg = "%s is listed in PACKAGES multiple times, this leads to packaging errors." % pkg
             package_qa_handle_error("packages-list", msg, d)
+        elif autodebug and pkg.endswith("-dbg"):
+            package_list.insert(0, pkg)
         else:
             package_list.append(pkg)
     d.setVar('PACKAGES', ' '.join(package_list))
@@ -973,6 +1001,16 @@ python populate_packages () {
 
     # os.mkdir masks the permissions with umask so we have to unset it first
     oldumask = os.umask(0)
+
+    debug = []
+    for root, dirs, files in cpath.walk(dvar):
+        dir = root[len(dvar):]
+        if not dir:
+            dir = os.sep
+        for f in (files + dirs):
+            path = "." + os.path.join(dir, f)
+            if "/.debug/" in path or path.endswith("/.debug"):
+                debug.append(path)
 
     for pkg in package_list:
         root = os.path.join(pkgdest, pkg)
@@ -985,34 +1023,17 @@ python populate_packages () {
             filesvar.replace("//", "/")
 
         origfiles = filesvar.split()
-        files = []
-        for file in origfiles:
-            if os.path.isabs(file):
-                file = '.' + file
-            if not file.startswith("./"):
-                file = './' + file
-            globbed = glob.glob(file)
-            if globbed:
-                if [ file ] != globbed:
-                    files += globbed
-                    continue
-            files.append(file)
+        files = files_from_filevars(origfiles)
+
+        if autodebug and pkg.endswith("-dbg"):
+            files.extend(debug)
 
         for file in files:
-            if not cpath.islink(file):
-                if cpath.isdir(file):
-                    newfiles =  [ os.path.join(file,x) for x in os.listdir(file) ]
-                    if newfiles:
-                        files += newfiles
-                        continue
             if (not cpath.islink(file)) and (not cpath.exists(file)):
                 continue
             if file in seen:
                 continue
             seen.append(file)
-
-            if d.getVar('LICENSE_EXCLUSION-' + pkg, True):
-                continue
 
             def mkdir(src, dest, p):
                 src = os.path.join(src, p)
@@ -1054,6 +1075,16 @@ python populate_packages () {
     os.umask(oldumask)
     os.chdir(workdir)
 
+    # Handle LICENSE_EXCLUSION
+    package_list = []
+    for pkg in packages.split():
+        if d.getVar('LICENSE_EXCLUSION-' + pkg, True):
+            msg = "%s has an incompatible license. Excluding from packaging." % pkg
+            package_qa_handle_error("incompatible-license", msg, d)
+        else:
+            package_list.append(pkg)
+    d.setVar('PACKAGES', ' '.join(package_list))
+
     unshipped = []
     for root, dirs, files in cpath.walk(dvar):
         dir = root[len(dvar):]
@@ -1065,12 +1096,14 @@ python populate_packages () {
                 unshipped.append(path)
 
     if unshipped != []:
-        msg = pn + ": Files/directories were installed but not shipped"
+        msg = pn + ": Files/directories were installed but not shipped in any package:"
         if "installed-vs-shipped" in (d.getVar('INSANE_SKIP_' + pn, True) or "").split():
             bb.note("Package %s skipping QA tests: installed-vs-shipped" % pn)
         else:
             for f in unshipped:
                 msg = msg + "\n  " + f
+            msg = msg + "\nPlease set FILES such that these items are packaged. Alternatively if they are unneeded, avoid installing them or delete them within do_install.\n"
+            msg = msg + "%s: %d installed and not shipped files." % (pn, len(unshipped))
             package_qa_handle_error("installed-vs-shipped", msg, d)
 }
 populate_packages[dirs] = "${D}"
