@@ -13,16 +13,16 @@ SECTION = "libs"
 SRC_URI = "http://www.freedesktop.org/software/harfbuzz/release/${BP}.tar.bz2 \
 "
 
-SRC_URI[md5sum] = "a2b6cbd437f22dd5dc93d377696c9204"
-SRC_URI[sha256sum] = "5ded7dc3d15fb5c9230d7a224b9256b67b35fde30193b4c3a4c3f6b13110e257"
+SRC_URI[md5sum] = "b9c144965dfde96672a7c6bdd4f9bf64"
+SRC_URI[sha256sum] = "32a1a7ad584a2f2cfba5c1d234d046c0521e86e7a21d403e15e89aa509ef0ea8"
 
 inherit autotools pkgconfig lib_package
 
-DEPENDS = "glib-2.0 cairo freetype"
+DEPENDS = "glib-2.0 cairo freetype graphite2"
 
 BBCLASSEXTEND = "native"
 
-EXTRA_OECONF = "--with-glib --with-freetype --with-cairo --without-graphite2"
+EXTRA_OECONF = "--with-glib --with-freetype --with-cairo --with-graphite2"
 
 PACKAGECONFIG ??= ""
 PACKAGECONFIG[icu] = "--with-icu,--without-icu,icu"
