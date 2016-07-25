@@ -527,6 +527,8 @@ python () {
               "-cross-canadian-" + d.getVar('TRANSLATED_TARGET_ARCH', True)]:
             if pn.endswith(t):
                 check_license = False
+        if pn.startswith("gcc-source-"):
+            check_license = False
 
         if check_license and bad_licenses:
             whitelist = []
