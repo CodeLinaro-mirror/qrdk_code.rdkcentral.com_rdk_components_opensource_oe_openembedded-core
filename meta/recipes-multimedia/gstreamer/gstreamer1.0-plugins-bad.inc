@@ -6,7 +6,7 @@ DEPENDS += "gstreamer1.0-plugins-base bzip2"
 
 S = "${WORKDIR}/gst-plugins-bad-${PV}"
 
-inherit gettext
+inherit gettext bluetooth
 
 
 PACKAGECONFIG ??= " \
@@ -41,7 +41,7 @@ PACKAGECONFIG[bz2]             = "--enable-bz2,--disable-bz2,bzip2"
 PACKAGECONFIG[fluidsynth]      = "--enable-fluidsynth,--disable-fluidsynth,fluidsynth"
 PACKAGECONFIG[schroedinger]    = "--enable-schro,--disable-schro,schroedinger"
 PACKAGECONFIG[smoothstreaming] = "--enable-smoothstreaming,--disable-smoothstreaming,libxml2"
-PACKAGECONFIG[bluez]           = "--enable-bluez,--disable-bluez,bluez4"
+PACKAGECONFIG[bluez]          = "--enable-bluez,--disable-bluez,${BLUEZ}"
 PACKAGECONFIG[rsvg]            = "--enable-rsvg,--disable-rsvg,librsvg"
 
 # these plugins have not been ported to 1.0 (yet):
