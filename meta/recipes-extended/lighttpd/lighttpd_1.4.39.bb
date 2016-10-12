@@ -65,6 +65,7 @@ do_install_append() {
 }
 
 FILES_${PN} += "${sysconfdir} /www"
+FILES_${PN} += "${systemd_unitdir}/system/lighttpd.service"
 
 CONFFILES_${PN} = "${sysconfdir}/lighttpd.conf"
 
