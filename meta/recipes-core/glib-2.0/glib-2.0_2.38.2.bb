@@ -1,4 +1,4 @@
-require glib.inc
+require glib_${PV}.inc
 
 PE = "1"
 
