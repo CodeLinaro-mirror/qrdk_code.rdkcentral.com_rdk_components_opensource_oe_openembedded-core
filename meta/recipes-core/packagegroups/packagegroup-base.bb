@@ -212,7 +212,7 @@ RRECOMMENDS_packagegroup-base-pcmcia = "\
 SUMMARY_packagegroup-base-bluetooth = "Bluetooth support"
 RDEPENDS_packagegroup-base-bluetooth = "\
     ${BLUEZ} \
-    ${@base_contains('COMBINED_FEATURES', 'alsa', 'libasound-module-bluez', '',d)} \
+    ${@base_contains('COMBINED_FEATURES', 'alsa', base_contains('BLUEZ', 'bluez4', 'libasound-module-bluez', '', d), '',d)} \
     "
 
 RRECOMMENDS_packagegroup-base-bluetooth = "\
