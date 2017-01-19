@@ -6,6 +6,10 @@ addtask make_scripts after do_patch before do_compile
 do_make_scripts[lockfiles] = "${TMPDIR}/kernel-scripts.lock"
 do_make_scripts[deptask] = "do_populate_sysroot"
 
+# Ensure one recipe isn't running do_make_scripts whilst another is using those
+# scripts in do_compile.
+do_compile[lockfiles] = "${TMPDIR}/kernel-scripts.lock"
+
 module_do_compile() {
 	unset CFLAGS CPPFLAGS CXXFLAGS LDFLAGS
 	oe_runmake KERNEL_PATH=${STAGING_KERNEL_DIR}   \
