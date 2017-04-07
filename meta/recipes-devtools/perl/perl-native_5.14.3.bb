@@ -18,7 +18,10 @@ SRC_URI = "http://www.cpan.org/src/5.0/perl-${PV}.tar.gz \
            file://debian/errno_ver.diff \
            file://dynaloaderhack.patch \
            file://perl-build-in-t-dir.patch \
-           file://perl-5.14.3-fix-CVE-2010-4777.patch "
+           file://perl-5.14.3-fix-CVE-2010-4777.patch \
+           file://0001-Prevent-premature-hsplit-calls-and-only-trigger-REHA.patch \
+           file://CVE-2013-7422.patch \
+"
 
 SRC_URI[md5sum] = "f6a3d878c688d111b495c87db56c5be5"
 SRC_URI[sha256sum] = "03638a4f01bc26b81231233671524b4163849a3a9ea5cc2397293080c4ea339f"
