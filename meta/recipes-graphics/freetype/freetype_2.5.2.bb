@@ -15,6 +15,21 @@ SECTION = "libs"
 
 SRC_URI = "${SOURCEFORGE_MIRROR}/freetype/freetype-${PV}.tar.bz2 \
 	   file://CVE-2014-2240.patch \
+           file://CVE-2014-9656.patch \
+           file://CVE-2014-9657.patch \
+           file://CVE-2014-9658.patch \
+           file://CVE-2014-9659.patch \
+           file://CVE-2014-9660.patch \
+           file://CVE-2014-9661.1.patch \
+           file://CVE-2014-9661.2.patch \
+           file://CVE-2014-9662.patch \
+           file://CVE-2014-9663.patch \
+           file://CVE-2014-9665.1.patch \
+           file://CVE-2014-9665.2.patch \
+           file://CVE-2014-9668.patch \
+           file://CVE-2014-9674.1.patch \
+           file://CVE-2014-9674.2.patch \
+           file://CVE-2014-9746.patch \
 "
 
 SRC_URI[md5sum] = "10e8f4d6a019b124088d18bc26123a25"
