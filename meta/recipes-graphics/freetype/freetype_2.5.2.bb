@@ -14,6 +14,7 @@ LIC_FILES_CHKSUM = "file://docs/LICENSE.TXT;md5=c017ff17fc6f0794adf93db5559ccd56
 SECTION = "libs"
 
 SRC_URI = "${SOURCEFORGE_MIRROR}/freetype/freetype-${PV}.tar.bz2 \
+	   file://CVE-2014-2240.patch \
 "
 
 SRC_URI[md5sum] = "10e8f4d6a019b124088d18bc26123a25"
