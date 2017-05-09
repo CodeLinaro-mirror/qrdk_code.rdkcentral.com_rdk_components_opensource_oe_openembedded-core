@@ -16,6 +16,8 @@ DEPENDS = "libogg virtual/libiconv"
 
 SRC_URI = "http://downloads.xiph.org/releases/flac/${BP}.tar.xz \
            file://0001-Fix-Makefile.am-altivec-logic.patch \
+           file://CVE-2014-8962.patch \
+           file://CVE-2014-9028.patch \
           "
 
 SRC_URI[md5sum] = "13b5c214cee8373464d3d65dee362cdd"
