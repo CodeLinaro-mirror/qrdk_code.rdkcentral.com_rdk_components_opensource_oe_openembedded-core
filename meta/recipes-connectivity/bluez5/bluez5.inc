@@ -6,19 +6,41 @@ LICENSE = "GPLv2+ & LGPLv2.1+"
 LIC_FILES_CHKSUM = "file://COPYING;md5=12f884d2ae1ff87c09e5b7ccc2c4ca7e \
                     file://COPYING.LIB;md5=fb504b67c50331fc78734fed90fb0e09 \
                     file://src/main.c;beginline=1;endline=24;md5=9bc54b93cd7e17bf03f52513f39f926e"
-DEPENDS = "udev libusb dbus-glib glib-2.0 libcheck"
+DEPENDS = "udev dbus-glib glib-2.0 libcheck"
 PROVIDES += "bluez-hcidump"
 RPROVIDES_${PN} += "bluez-hcidump"
 
 RCONFLICTS_${PN} = "bluez4"
 
-PACKAGECONFIG ??= "obex-profiles readline ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'systemd', '', d)}"
+PACKAGECONFIG ??= "obex-profiles \
+    readline \
+    ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'systemd', '', d)} \
+    a2dp-profiles \
+    avrcp-profiles \
+    network-profiles \
+    hid-profiles \
+    hog-profiles \
+    tools \
+    deprecated \
+"
 PACKAGECONFIG[obex-profiles] = "--enable-obex,--disable-obex,libical"
 PACKAGECONFIG[readline] = "--enable-client,--disable-client,readline,"
 PACKAGECONFIG[testing] = "--enable-testing,--disable-testing"
 PACKAGECONFIG[midi] = "--enable-midi,--disable-midi,alsa-lib"
 PACKAGECONFIG[systemd] = "--enable-systemd,--disable-systemd"
 PACKAGECONFIG[cups] = "--enable-cups,--disable-cups,,cups"
+PACKAGECONFIG[nfc] = "--enable-nfc,--disable-nfc"
+PACKAGECONFIG[sap-profiles] = "--enable-sap,--disable-sap"
+PACKAGECONFIG[a2dp-profiles] = "--enable-a2dp,--disable-a2dp"
+PACKAGECONFIG[avrcp-profiles] = "--enable-avrcp,--disable-avrcp"
+PACKAGECONFIG[network-profiles] = "--enable-network,--disable-network"
+PACKAGECONFIG[hid-profiles] = "--enable-hid,--disable-hid"
+PACKAGECONFIG[hog-profiles] = "--enable-hog,--disable-hog"
+PACKAGECONFIG[health-profiles] = "--enable-health,--disable-health"
+PACKAGECONFIG[sixaxis] = "--enable-sixaxis,--disable-sixaxis"
+PACKAGECONFIG[tools] = "--enable-tools,--disable-tools"
+PACKAGECONFIG[threads] = "--enable-threads,--disable-threads"
+PACKAGECONFIG[deprecated] = "--enable-deprecated,--disable-deprecated"
 
 SRC_URI = "\
     ${KERNELORG_MIRROR}/linux/bluetooth/bluez-${PV}.tar.xz \
@@ -27,14 +49,16 @@ SRC_URI = "\
     file://run-ptest \
     ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', '', 'file://0001-Allow-using-obexd-without-systemd-in-the-user-sessio.patch', d)} \
     file://0001-tests-add-a-target-for-building-tests-without-runnin.patch \
+    file://0001-hciattach-bcm43xx-fix-the-delay-timer-for-firmware-d.patch \
+    file://cve-2017-1000250.patch \
 "
 S = "${WORKDIR}/bluez-${PV}"
+
+CVE_PRODUCT = "bluez"
 
 inherit autotools pkgconfig systemd update-rc.d distro_features_check ptest
 
 EXTRA_OECONF = "\
-  --enable-tools \
-  --enable-deprecated \
   --enable-test \
   --enable-datafiles \
   --enable-library \
@@ -48,7 +72,7 @@ NOINST_TOOLS_BT ??= ""
 NOINST_TOOLS = " \
     ${@bb.utils.contains('PACKAGECONFIG', 'readline', '${NOINST_TOOLS_READLINE}', '', d)} \
     ${@bb.utils.contains('PACKAGECONFIG', 'testing', '${NOINST_TOOLS_TESTING}', '', d)} \
-    ${NOINST_TOOLS_BT} \
+    ${@bb.utils.contains('PACKAGECONFIG', 'tools', '${NOINST_TOOLS_BT}', '', d)} \
 "
 
 do_install_append() {
@@ -56,9 +80,6 @@ do_install_append() {
 	install -m 0755 ${WORKDIR}/init ${D}${INIT_D_DIR}/bluetooth
 
 	install -d ${D}${sysconfdir}/bluetooth/
-	if [ -f ${S}/profiles/audio/audio.conf ]; then
-		install -m 0644 ${S}/profiles/audio/audio.conf ${D}/${sysconfdir}/bluetooth/
-	fi
 	if [ -f ${S}/profiles/network/network.conf ]; then
 		install -m 0644 ${S}/profiles/network/network.conf ${D}/${sysconfdir}/bluetooth/
 	fi
