@@ -20,8 +20,8 @@ SRC_URI[sha256sum] = "e65c234cadf7c81b6b1567c440e3b9b31b44f51c27df3e45741b88848d
 inherit autotools gettext
 
 do_install_append() {
-	# We only need the compressed copy, remove the uncompressed version
-	rm -f ${D}${datadir}/usb.ids
+	# Keeping uncompressed folder to use xz-128KB compression, removed usb.ids.gz compressed version.
+	rm -f ${D}${datadir}/usb.ids.gz
 }
 
 PACKAGES += "${PN}-ids"
