@@ -909,7 +909,7 @@ class OpkgRootfs(DpkgOpkgRootfs):
 
         self.pm.install_complementary()
 
-        self._setup_dbg_rootfs(['/etc', '/var/lib/opkg', '/usr/lib/ssl'])
+        self._setup_dbg_rootfs(['/etc', '/var/lib/opkg', '/usr/lib/ssl', '/var/lib/nfs'])
 
         execute_pre_post_process(self.d, opkg_post_process_cmds)
 
