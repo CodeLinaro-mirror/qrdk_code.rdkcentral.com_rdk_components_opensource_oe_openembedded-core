@@ -28,6 +28,7 @@ SRC_URI = "http://downloads.yoctoproject.org/releases/eglibc/eglibc-${PV}-svnr25
            file://fix-tibetian-locales.patch \
            file://ppce6500-32b_slow_ieee754_sqrt.patch \
            file://grok_gold.patch \
+           file://0001-Fix-ARM-build-with-GCC-trunk.patch \
            file://CVE-2014-5119.patch \
            file://CVE-2014-7817-wordexp-fails-to-honour-WRDE_NOCMD.patch \
            file://CVE-2012-3406-Stack-overflow-in-vfprintf-BZ-16617.patch \

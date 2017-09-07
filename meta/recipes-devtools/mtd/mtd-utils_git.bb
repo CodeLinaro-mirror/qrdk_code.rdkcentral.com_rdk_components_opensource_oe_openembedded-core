@@ -10,6 +10,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=0636e73ff0215e8d672dc4c32c317bb3 \
 SRCREV = "dcea43eba91642939c82739387147da26d572758"
 SRC_URI = "git://git.infradead.org/mtd-utils.git \
 		file://add-exclusion-to-mkfs-jffs2-git-2.patch \
+		file://0001-mkfs.ubifs-Fix-build-with-gcc-5.1.patch \
 "
 
 PV = "1.5.0+git${SRCPV}"

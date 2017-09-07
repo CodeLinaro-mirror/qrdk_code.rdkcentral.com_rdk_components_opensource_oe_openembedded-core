@@ -19,6 +19,8 @@ SRC_URI[sha256sum] = "cafc9ed6a87c53a35175d5a1220a96ca386696eef2fa059cc0306211f2
 
 inherit autotools binconfig pkgconfig gettext
 
+CPPFLAGS += "-P"
+
 FILES_${PN}-dev += "${bindir}/gpg-error"
 
 do_install_append() {
