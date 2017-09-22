@@ -1,0 +1,20 @@
+--- libxml2-2.9.1/configure.in	2013-04-19 07:25:20.000000000 +0000
++++ libxml2-2.9.1/configure_mod.in	2017-09-05 11:30:38.602032247 +0000
+@@ -705,7 +705,7 @@
+     fi
+ 
+     # warnings we'd like to see
+-    CFLAGS="${CFLAGS} -pedantic -W -Wformat -Wunused -Wimplicit -Wreturn-type -Wswitch -Wcomment -Wtrigraphs -Wformat -Wchar-subscripts -Wuninitialized -Wparentheses -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Winline -Wredundant-decls"
++    CFLAGS="${CFLAGS} -pedantic -W -Wformat -Wno-format-extra-args -Wunused -Wimplicit -Wreturn-type -Wswitch -Wcomment -Wtrigraphs -Wchar-subscripts -Wuninitialized -Wparentheses -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Winline -Wredundant-decls"
+     # warnings we'd like to supress
+     CFLAGS="${CFLAGS} -Wno-long-long"
+     case "${host}" in
+@@ -920,7 +920,7 @@
+ 	fi
+     fi
+     if test "${GCC}" = "yes" ; then
+-    CFLAGS="-g -O -pedantic -W -Wformat -Wunused -Wimplicit -Wreturn-type -Wswitch -Wcomment -Wtrigraphs -Wformat -Wchar-subscripts -Wuninitialized -Wparentheses -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Winline -Wredundant-decls -Wall"
++    CFLAGS="-g -O -pedantic -W -Wformat -Wno-format-extra-args -Wunused -Wimplicit -Wreturn-type -Wswitch -Wcomment -Wtrigraphs -Wchar-subscripts -Wuninitialized -Wparentheses -Wshadow -Wpointer-arith -Wcast-align -Wwrite-strings -Waggregate-return -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Winline -Wredundant-decls -Wall"
+     fi
+     STATIC_BINARIES="-static"
+ dnl -Wcast-qual -ansi
