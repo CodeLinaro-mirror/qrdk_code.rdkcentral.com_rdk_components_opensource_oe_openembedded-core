@@ -409,3 +409,14 @@ do_bundle_initramfs () {
 	:
 }
 addtask bundle_initramfs after do_rootfs
+
+do_image () {
+	:
+}
+addtask image after do_rootfs before do_image_complete
+
+do_image_complete () {
+	:
+}
+addtask image_complete after do_image before do_build
+
