@@ -3,6 +3,7 @@ require ncurses.inc
 PR = "${INC_PR}.1"
 
 SRC_URI += "file://tic-hang.patch \
+            file://ncurses-5.9-gcc-5.patch \
             file://config.cache \
 "
 
