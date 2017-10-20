@@ -10,4 +10,6 @@ SRC_URI = "http://www.freedesktop.org/software/libevdev/${BP}.tar.xz"
 SRC_URI[md5sum] = "7c1ee9c2069489b2a25dfde6f8e2ff6a"
 SRC_URI[sha256sum] = "860e9a1d5594393ff1f711cdeaf048efe354992019068408abbcfa4914ad6709"
 
+DEPENDS += "libcheck"
+
 inherit autotools pkgconfig
