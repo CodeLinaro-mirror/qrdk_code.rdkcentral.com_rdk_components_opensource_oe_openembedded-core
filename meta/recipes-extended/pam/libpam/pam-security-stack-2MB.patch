@@ -1,0 +1,16 @@
+diff --git a/modules/pam_limits/limits.conf b/modules/pam_limits/limits.conf
+index be621a7..b711ae1 100644
+--- a/modules/pam_limits/limits.conf
++++ b/modules/pam_limits/limits.conf
+@@ -39,8 +39,8 @@
+ #<domain>      <type>  <item>         <value>
+ #
+ 
+-#*               soft    core            0
+-#*               hard    rss             10000
++*               soft    stack           2048
++*               hard    stack           2048
+ #@student        hard    nproc           20
+ #@faculty        soft    nproc           20
+ #@faculty        hard    nproc           50
+
