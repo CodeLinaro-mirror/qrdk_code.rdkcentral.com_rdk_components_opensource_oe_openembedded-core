@@ -109,10 +109,10 @@ FILES_libstdc++ = "${libdir}/libstdc++.so.*"
 FILES_libstdc++-dev = "\
   ${includedir}/c++/ \
   ${libdir}/libstdc++.so \
-  ${libdir}/libstdc++.la \
+  ${libdir}/libstdc++*.la \
   ${libdir}/libsupc++.la"
 FILES_libstdc++-staticdev = "\
-  ${libdir}/libstdc++.a \
+  ${libdir}/libstdc++*.a \
   ${libdir}/libsupc++.a"
 
 FILES_libstdc++-precompile-dev = "${includedir}/c++/${TARGET_SYS}/bits/*.gch"
