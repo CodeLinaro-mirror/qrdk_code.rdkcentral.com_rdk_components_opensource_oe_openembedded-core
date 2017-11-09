@@ -1,0 +1,32 @@
+From f7c7ce71ed59d9bbf600815550b4aaf72525b1a3 Mon Sep 17 00:00:00 2001
+From: Khem Raj <raj.khem@gmail.com>
+Date: Wed, 8 Nov 2017 06:31:46 +0000
+Subject: [PATCH 2/2] Remove redundant NULL tests.
+
+GCC6 and Clang give warnings on redundant NULL tests of parameters
+that are declared with __nonnull_attribute__.
+
+Backported from https://github.com/cuviper/elfutils/commit/2d982861e5e23d38653df7d8dce1d2282cda8ce1
+
+Signed-off-by: Khem Raj <raj.khem@gmail.com>
+---
+ libdw/dwarf_siblingof.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/libdw/dwarf_siblingof.c b/libdw/dwarf_siblingof.c
+index c54b6c8..cae65b6 100644
+--- a/libdw/dwarf_siblingof.c
++++ b/libdw/dwarf_siblingof.c
+@@ -45,8 +45,7 @@ dwarf_siblingof (die, result)
+   if (die == NULL)
+     return -1;
+ 
+-  if (result == NULL)
+-    return -1;
++  /* result is declared NN */
+ 
+   if (result != die)
+     result->addr = NULL;
+-- 
+1.8.3.1
+
