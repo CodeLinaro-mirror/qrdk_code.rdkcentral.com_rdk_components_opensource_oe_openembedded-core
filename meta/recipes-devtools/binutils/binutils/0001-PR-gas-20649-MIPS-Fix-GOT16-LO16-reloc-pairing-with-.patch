@@ -1,0 +1,221 @@
+From 9e009953a54bfbf79d83f37797f846c923aeea43 Mon Sep 17 00:00:00 2001
+From: "Maciej W. Rozycki" <macro@imgtec.com>
+Date: Wed, 18 Jan 2017 18:18:21 +0000
+Subject: [PATCH] PR gas/20649: MIPS: Fix GOT16/LO16 reloc pairing with comdat
+ sections
+
+Correct a regression from commit 8614eeee67f9 ("Traditional MIPS
+patches"), <https://sourceware.org/ml/binutils/2000-07/msg00018.html>,
+which caused symbols in linkonce or what is these days known as comdat
+sections to be treated as external for the purpose of PIC relocation
+generation even if their binding remains STB_LOCAL.  This in turn
+disabled GOT16/LO16 relocation pairing with references to such symbols,
+as no complementing LO16 relocation is expected for external GOT16
+references in the o32 ABI, which ultimately leads to link errors, e.g.:
+
+ld: comdat-reloc.o: Can't find matching LO16 reloc against `foo' for R_MIPS_GOT16 at 0x24 in section `.text.bar[bar]'
+
+as with the LD test case included with this change.
+
+Revert the special case for symbols in comdat sections then, making code
+actually match `adjust_reloc_syms' as indicated in its explanatory
+comment, and adjust calling code accordingly.  Also bring back the
+corresponding description of what now is `s_is_linkonce', lost with
+commit 5f0fe04bc550 ("Improved MIPS16/MIPS32 code intermixing for
+gas."), <https://www.sourceware.org/ml/binutils/2006-07/msg00039.html>.
+
+	gas/
+	PR gas/20649
+	* config/tc-mips.c (pic_need_relax): Don't check for linkonce
+	symbols, remove the `segtype' parameter.
+	(mips_frob_file, md_estimate_size_before_relax): Adjust
+	accordingly.
+	(s_is_linkonce): Add an explanatory comment.
+	* testsuite/gas/mips/comdat-reloc.d: New test.
+	* testsuite/gas/mips/comdat-reloc.s: New test source.
+	* testsuite/gas/mips/mips.exp: Run the new test.
+
+	ld/
+	PR gas/20649
+	* testsuite/ld-mips-elf/mips-elf.exp: Add PIC comdat GOT16/LO16
+	relocation pairing link test.
+---
+ gas/ChangeLog                         | 12 +++++++++++
+ gas/config/tc-mips.c                  | 11 +++++-----
+ gas/testsuite/gas/mips/comdat-reloc.d | 31 ++++++++++++++++++++++++++++
+ gas/testsuite/gas/mips/comdat-reloc.s | 38 +++++++++++++++++++++++++++++++++++
+ gas/testsuite/gas/mips/mips.exp       |  2 ++
+ ld/ChangeLog                          |  6 ++++++
+ ld/testsuite/ld-mips-elf/mips-elf.exp |  7 +++++++
+ 7 files changed, 102 insertions(+), 5 deletions(-)
+ create mode 100644 gas/testsuite/gas/mips/comdat-reloc.d
+ create mode 100644 gas/testsuite/gas/mips/comdat-reloc.s
+
+Index: binutils-2.24/gas/config/tc-mips.c
+===================================================================
+--- binutils-2.24.orig/gas/config/tc-mips.c
++++ binutils-2.24/gas/config/tc-mips.c
+@@ -1280,7 +1280,7 @@ static void s_mips_stab (int);
+ static void s_mips_weakext (int);
+ static void s_mips_file (int);
+ static void s_mips_loc (int);
+-static bfd_boolean pic_need_relax (symbolS *, asection *);
++static bfd_boolean pic_need_relax (symbolS *);
+ static int relaxed_branch_length (fragS *, asection *, int);
+ static int relaxed_micromips_16bit_branch_length (fragS *, asection *, int);
+ static int relaxed_micromips_32bit_branch_length (fragS *, asection *, int);
+@@ -3811,6 +3811,8 @@ mips_move_text_labels (void)
+   mips_move_labels (seg_info (now_seg)->label_list, TRUE);
+ }
+ 
++/* Duplicate the test for LINK_ONCE sections as in `adjust_reloc_syms'.  */
++
+ static bfd_boolean
+ s_is_linkonce (symbolS *sym, segT from_seg)
+ {
+@@ -14049,7 +14051,7 @@ mips_frob_file (void)
+ 	 constants; we'll report an error for those later.  */
+       if (got16_reloc_p (l->fixp->fx_r_type)
+ 	  && !(l->fixp->fx_addsy
+-	       && pic_need_relax (l->fixp->fx_addsy, l->seg)))
++	       && pic_need_relax (l->fixp->fx_addsy)))
+ 	continue;
+ 
+       /* Check quickly whether the next fixup happens to be a matching %lo.  */
+@@ -15824,7 +15826,7 @@ nopic_need_relax (symbolS *sym, int befo
+ /* Return true if the given symbol should be considered local for SVR4 PIC.  */
+ 
+ static bfd_boolean
+-pic_need_relax (symbolS *sym, asection *segtype)
++pic_need_relax (symbolS *sym)
+ {
+   asection *symsec;
+ 
+@@ -15849,7 +15851,6 @@ pic_need_relax (symbolS *sym, asection *
+   return (!bfd_is_und_section (symsec)
+ 	  && !bfd_is_abs_section (symsec)
+ 	  && !bfd_is_com_section (symsec)
+-	  && !s_is_linkonce (sym, segtype)
+ 	  /* A global or weak symbol is treated as external.  */
+ 	  && (!S_IS_WEAK (sym) && !S_IS_EXTERNAL (sym)));
+ }
+@@ -16279,7 +16280,7 @@ md_estimate_size_before_relax (fragS *fr
+   if (mips_pic == NO_PIC)
+     change = nopic_need_relax (fragp->fr_symbol, 0);
+   else if (mips_pic == SVR4_PIC)
+-    change = pic_need_relax (fragp->fr_symbol, segtype);
++    change = pic_need_relax (fragp->fr_symbol);
+   else if (mips_pic == VXWORKS_PIC)
+     /* For vxworks, GOT16 relocations never have a corresponding LO16.  */
+     change = 0;
+Index: binutils-2.24/gas/testsuite/gas/mips/comdat-reloc.d
+===================================================================
+--- /dev/null
++++ binutils-2.24/gas/testsuite/gas/mips/comdat-reloc.d
+@@ -0,0 +1,31 @@
++#readelf: -gr
++#name: MIPS ELF o32 PIC comdat GOT16/LO16 relocation pairing
++#as: -32 -mno-pdr
++
++# Make sure the orphan GOT16 relocation is paired with LO16 for a local
++# symbol in a comdat section, i.e. rather than this:
++#
++# 00000014  00000509 R_MIPS_GOT16      00000000   foo
++# 00000020  00000506 R_MIPS_LO16       00000000   foo
++# 0000001c  00000509 R_MIPS_GOT16      00000000   foo
++#
++# we have this:
++#
++# 00000014  00000509 R_MIPS_GOT16      00000000   foo
++# 00000024  00000509 R_MIPS_GOT16      00000000   foo
++# 0000001c  00000506 R_MIPS_LO16       00000000   foo
++
++#...
++COMDAT group section \[.....\] `\.group' \[bar\] contains .+ sections:
++   \[Index\]    Name
++   \[.....\]   \.text\.foo
++   \[.....\]   \.text\.bar
++#...
++Relocation section '\.rel\.text\.bar' at offset .+ contains .+ entries:
++ Offset     Info    Type            Sym\.Value  Sym\. Name
++00000000  ......05 R_MIPS_HI16       00000000   _gp_disp
++00000004  ......06 R_MIPS_LO16       00000000   _gp_disp
++00000014  ......09 R_MIPS_GOT16      00000000   foo
++00000024  ......09 R_MIPS_GOT16      00000000   foo
++0000001c  ......06 R_MIPS_LO16       00000000   foo
++#pass
+Index: binutils-2.24/gas/testsuite/gas/mips/comdat-reloc.s
+===================================================================
+--- /dev/null
++++ binutils-2.24/gas/testsuite/gas/mips/comdat-reloc.s
+@@ -0,0 +1,38 @@
++	.abicalls
++
++	.section	.text.foo, "axG", @progbits, bar, comdat
++	.align	2
++	.ent	foo
++	.type	foo, @function
++foo:
++	.frame	$sp, 0, $31
++	.mask	0x00000000, 0
++	.fmask	0x00000000, 0
++	jr	$31
++	.end	foo
++	.size	foo, . - foo
++
++	.section	.text.bar, "axG", @progbits, bar, comdat
++	.align	2
++	.globl	bar
++	.ent	bar
++	.type	bar, @function
++bar:
++	.frame	$sp, 0, $31
++	.mask	0x00000000, 0
++	.fmask	0x00000000, 0
++	.set	noreorder
++	.cpload	$25
++	.set	reorder
++	beqz	$4, 1f
++	.set	noreorder
++	lw	$2, %got(foo)($28)
++0:
++	jr	$31
++	 addiu	$2, $2, %lo(foo)
++1:
++	b	0b
++	 lw	$2, %got(foo)($28)
++	.set	reorder
++	.end	bar
++	.size	bar, . - bar
+Index: binutils-2.24/gas/testsuite/gas/mips/mips.exp
+===================================================================
+--- binutils-2.24.orig/gas/testsuite/gas/mips/mips.exp
++++ binutils-2.24/gas/testsuite/gas/mips/mips.exp
+@@ -885,6 +885,8 @@ if { [istarget mips*-*-vxworks*] } {
+     }
+     run_list_test_arches "elf-rel30" "-32" [mips_arch_list_all]
+ 
++    run_dump_test "comdat-reloc"
++
+     run_dump_test "${tmips}mips${el}16-e"
+     run_dump_test "${tmips}mips${el}16-f"
+ 
+Index: binutils-2.24/ld/testsuite/ld-mips-elf/mips-elf.exp
+===================================================================
+--- binutils-2.24.orig/ld/testsuite/ld-mips-elf/mips-elf.exp
++++ binutils-2.24/ld/testsuite/ld-mips-elf/mips-elf.exp
+@@ -407,7 +407,13 @@ if { $has_newabi } {
+ 	    {} \
+ 	    "reloc-6b"]]
+ }
+-
++run_ld_link_tests [list \
++    [list \
++       "MIPS link ELF o32 PIC comdat GOT16/LO16 relocation pairing" \
++       "$abi_ldflags(o32) -e bar" "" "$abi_asflags(o32) -mno-pdr" \
++       "../../../gas/testsuite/gas/mips/comdat-reloc.s" \
++       {} \
++       "comdat-reloc"]]
+ if {$has_newabi && $linux_gnu} {
+     run_dump_test "eh-frame1-n32"
+     run_dump_test "eh-frame1-n64"
