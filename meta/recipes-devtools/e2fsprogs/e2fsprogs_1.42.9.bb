@@ -24,16 +24,11 @@ SRC_URI += "file://acinclude.m4 \
 SRC_URI[md5sum] = "3f8e41e63b432ba114b33f58674563f7"
 SRC_URI[sha256sum] = "2f92ac06e92fa00f2ada3ee67dad012d74d685537527ad1241d82f2d041f2802"
 
-EXTRA_OECONF += "--libdir=${base_libdir} --sbindir=${base_sbindir} --enable-elf-shlibs --disable-libuuid --disable-uuidd"
+EXTRA_OECONF += "--libdir=${base_libdir} --sbindir=${base_sbindir} --enable-elf-shlibs --disable-libuuid --disable-uuidd --enable-verbose-makecmds"
 EXTRA_OECONF_darwin = "--libdir=${base_libdir} --sbindir=${base_sbindir} --enable-bsd-shlibs"
 
 do_configure_prepend () {
 	cp ${WORKDIR}/acinclude.m4 ${S}/
-}
-
-do_compile_prepend () {
-	find ./ -print | grep -v ./patches | xargs chmod u=rwX
-	( cd ${S}/util; ${BUILD_CC} subst.c -o ${B}/util/subst )
 }
 
 do_install () {
@@ -63,6 +58,16 @@ do_install () {
 	ln -sf tune2fs ${D}${base_sbindir}/e2label
 
 	oe_multilib_header ext2fs/ext2_types.h
+	install -d ${D}${base_bindir}
+	mv ${D}${bindir}/chattr ${D}${base_bindir}/chattr.e2fsprogs
+
+	install -v -m 755 ${S}/contrib/populate-extfs.sh ${D}${base_sbindir}/
+}
+
+do_install_append_class-target() {
+	# Clean host path in compile_et, mk_cmds
+	sed -i -e "s,ET_DIR=\"${S}/lib/et\",ET_DIR=\"${datadir}/et\",g" ${D}${bindir}/compile_et
+	sed -i -e "s,SS_DIR=\"${S}/lib/ss\",SS_DIR=\"${datadir}/ss\",g" ${D}${bindir}/mk_cmds
 }
 
 RDEPENDS_e2fsprogs = "e2fsprogs-badblocks"
