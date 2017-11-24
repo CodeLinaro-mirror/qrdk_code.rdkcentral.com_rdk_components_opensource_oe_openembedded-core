@@ -553,7 +553,7 @@ def pstaging_fetch(sstatefetch, sstatepkg, d):
         bb.fetch2.logger.setLevel(logging.CRITICAL)
         try:
             fetcher = bb.fetch2.Fetch([srcuri], localdata, cache=False)
-            fetcher.download(warn_only = True)
+            fetcher.download()
 
             # Need to optimise this, if using file:// urls, the fetcher just changes the local path
             # For now work around by symlinking
