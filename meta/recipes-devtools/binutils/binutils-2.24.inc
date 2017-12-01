@@ -41,6 +41,7 @@ SRC_URI = "\
      file://binutils_CVE-2014-8504.patch \
      file://binutils_CVE-2014-8737.patch \
      file://0001-PR-gas-20649-MIPS-Fix-GOT16-LO16-reloc-pairing-with-.patch \
+     file://0001-Fix-tc-i386.c-Werror-logical-not-parentheses-error.patch \
      "
 
 SRC_URI[md5sum] = "e0f71a7b2ddab0f8612336ac81d9636b"
