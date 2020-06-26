@@ -1,5 +1,5 @@
 SUMMARY = "Embeddable SQL database engine"
-HOMEPAGE = "http://www.sqlite.org"
+HOMEPAGE = "https://www.sqlite.org"
 SECTION = "libs"
 
 PE = "3"
@@ -14,7 +14,7 @@ SQLITE_PV = "${@sqlite_download_version(d)}"
 
 S = "${WORKDIR}/sqlite-autoconf-${SQLITE_PV}"
 
-UPSTREAM_CHECK_URI = "http://www.sqlite.org/"
+UPSTREAM_CHECK_URI = "https://www.sqlite.org/"
 UPSTREAM_CHECK_REGEX = "releaselog/(?P<pver>(\d+[\.\-_]*)+)\.html"
 
 CVE_PRODUCT = "sqlite"
