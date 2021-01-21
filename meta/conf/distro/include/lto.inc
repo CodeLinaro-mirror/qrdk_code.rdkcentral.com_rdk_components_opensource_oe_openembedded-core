@@ -60,6 +60,7 @@ LTO_pn-libpcap = ""
 LTO_pn-iptables = ""
 LTO_pn-python = ""
 LTO_pn-tcp-wrappers = ""
+LTO_pn-sysstat = ""
 
 LTO ?= "${@bb.utils.contains('DISTRO_FEATURES', 'lto', '-flto', '', d)}"
 
