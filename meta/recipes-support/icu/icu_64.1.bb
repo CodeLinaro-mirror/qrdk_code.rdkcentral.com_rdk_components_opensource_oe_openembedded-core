@@ -18,6 +18,7 @@ SRC_URI = "${BASE_SRC_URI} \
            file://fix-install-manx.patch \
            file://0001-Fix-big-endian-build.patch \
            file://makefile_cplus.patch \
+           file://workaround_missing_resource_error_with_invalid_locale.patch \
            "
 
 #SRC_URI_append_class-target = "\
