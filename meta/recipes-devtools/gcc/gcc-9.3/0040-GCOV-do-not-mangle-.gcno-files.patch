@@ -1,0 +1,29 @@
+Source: gcc.gnu.org (PR gcov-profile/97193)
+---
+Index: gcc-9.3.0/gcc/coverage.c
+===================================================================
+--- gcc-9.3.0.orig/gcc/coverage.c
++++ gcc-9.3.0/gcc/coverage.c
+@@ -1201,7 +1201,9 @@ coverage_obj_finish (vec<constructor_elt
+ void
+ coverage_init (const char *filename)
+ {
++  const char *original_filename = filename;
+   int len = strlen (filename);
++  int original_len = len;
+   int prefix_len = 0;
+ 
+   /* Since coverage_init is invoked very early, before the pass
+@@ -1255,9 +1257,9 @@ coverage_init (const char *filename)
+   /* Name of bbg file.  */
+   if (flag_test_coverage && !flag_compare_debug)
+     {
+-      bbg_file_name = XNEWVEC (char, len + strlen (GCOV_NOTE_SUFFIX) + 1);
+-      memcpy (bbg_file_name, filename, len);
+-      strcpy (bbg_file_name + len, GCOV_NOTE_SUFFIX);
++      bbg_file_name = XNEWVEC (char, original_len + strlen (GCOV_NOTE_SUFFIX) + 1);
++      memcpy (bbg_file_name, original_filename, original_len);
++      strcpy (bbg_file_name + original_len, GCOV_NOTE_SUFFIX);
+ 
+       if (!gcov_open (bbg_file_name, -1))
+ 	{
