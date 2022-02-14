@@ -108,6 +108,15 @@ python () {
             if local_srcuri and task in fetch_tasks:
                 continue
             bb.build.deltask(task, d)
+            if bb.data.inherits_class('reproducible_build', d) and task == 'do_unpack':
+                # The reproducible_build's create_source_date_epoch_stamp function must
+                # be run after the source is available and before the
+                # do_deploy_source_date_epoch task.  In the normal case, it's attached
+                # to do_unpack as a postfuncs, but since we removed do_unpack (above)
+                # we need to move the function elsewhere.  The easiest thing to do is
+                # move it into the prefuncs of the do_deploy_source_date_epoch task.
+                # This is safe, as externalsrc runs with the source already unpacked.
+                d.prependVarFlag('do_deploy_source_date_epoch', 'prefuncs', 'create_source_date_epoch_stamp ')
 
         d.prependVarFlag('do_compile', 'prefuncs', "externalsrc_compile_prefunc ")
         d.prependVarFlag('do_configure', 'prefuncs', "externalsrc_configure_prefunc ")
@@ -219,11 +228,12 @@ def srctree_hash_files(d, srcdir=None):
             submodule_helper = subprocess.check_output(['git', 'submodule--helper', 'list'], cwd=s_dir, env=env).decode("utf-8")
             for line in submodule_helper.splitlines():
                 module_dir = os.path.join(s_dir, line.rsplit(maxsplit=1)[1])
-                proc = subprocess.Popen(['git', 'add', '-A', '.'], cwd=module_dir, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                proc.communicate()
-                proc = subprocess.Popen(['git', 'write-tree'], cwd=module_dir, env=env, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-                stdout, _ = proc.communicate()
-                git_sha1 += stdout.decode("utf-8")
+                if os.path.isdir(module_dir):
+                    proc = subprocess.Popen(['git', 'add', '-A', '.'], cwd=module_dir, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    proc.communicate()
+                    proc = subprocess.Popen(['git', 'write-tree'], cwd=module_dir, env=env, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+                    stdout, _ = proc.communicate()
+                    git_sha1 += stdout.decode("utf-8")
             sha1 = hashlib.sha1(git_sha1.encode("utf-8")).hexdigest()
         with open(oe_hash_file, 'w') as fobj:
             fobj.write(sha1)

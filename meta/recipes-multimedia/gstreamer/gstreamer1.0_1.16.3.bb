@@ -22,6 +22,7 @@ SRC_URI = " \
     file://0003-meson-Add-valgrind-feature.patch \
     file://0004-meson-Add-option-for-installed-tests.patch \
     file://0005-bufferpool-only-resize-in-reset-when-maxsize-is-larger.patch \
+    file://0006-tests-seek-Don-t-use-too-strict-timeout-for-validati.patch \
 "
 SRC_URI[md5sum] = "beecf6965a17fb17fa3b262fd36df70a"
 SRC_URI[sha256sum] = "692f037968e454e508b0f71d9674e2e26c78475021407fcf8193b1c7e59543c7"
@@ -73,5 +74,14 @@ FILES_${PN}-bash-completion += "${datadir}/bash-completion/completions/ ${datadi
 FILES_${PN}-dbg += "${datadir}/gdb ${datadir}/gstreamer-1.0/gdb"
 
 CVE_PRODUCT = "gstreamer"
+
+# CPE entries for gst-plugins-base are listed as gstreamer issues
+# so we need to ignore the false hits
+CVE_CHECK_WHITELIST += "CVE-2021-3522"
+
+# CPE entries for gst-plugins-good are listed as gstreamer issues
+# so we need to ignore the false hits
+CVE_CHECK_WHITELIST += "CVE-2021-3497"
+CVE_CHECK_WHITELIST += "CVE-2021-3498"
 
 require gstreamer1.0-ptest.inc

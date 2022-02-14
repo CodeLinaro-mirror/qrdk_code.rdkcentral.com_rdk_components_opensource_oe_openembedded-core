@@ -671,13 +671,16 @@ IMAGE_POSTPROCESS_COMMAND[vardepsexclude] += "buildhistory_get_imageinfo"
 POPULATE_SDK_POST_TARGET_COMMAND_append = " buildhistory_list_installed_sdk_target;"
 POPULATE_SDK_POST_TARGET_COMMAND_append = " buildhistory_get_sdk_installed_target;"
 POPULATE_SDK_POST_TARGET_COMMAND[vardepvalueexclude] .= "| buildhistory_list_installed_sdk_target;| buildhistory_get_sdk_installed_target;"
+POPULATE_SDK_POST_TARGET_COMMAND[vardepsexclude] += "buildhistory_list_installed_sdk_target buildhistory_get_sdk_installed_target"
 
 POPULATE_SDK_POST_HOST_COMMAND_append = " buildhistory_list_installed_sdk_host;"
 POPULATE_SDK_POST_HOST_COMMAND_append = " buildhistory_get_sdk_installed_host;"
 POPULATE_SDK_POST_HOST_COMMAND[vardepvalueexclude] .= "| buildhistory_list_installed_sdk_host;| buildhistory_get_sdk_installed_host;"
+POPULATE_SDK_POST_HOST_COMMAND[vardepsexclude] += "buildhistory_list_installed_sdk_host buildhistory_get_sdk_installed_host"
 
 SDK_POSTPROCESS_COMMAND_append = " buildhistory_get_sdkinfo ; buildhistory_get_extra_sdkinfo; "
 SDK_POSTPROCESS_COMMAND[vardepvalueexclude] .= "| buildhistory_get_sdkinfo ; buildhistory_get_extra_sdkinfo; "
+SDK_POSTPROCESS_COMMAND[vardepsexclude] += "buildhistory_get_sdkinfo buildhistory_get_extra_sdkinfo"
 
 python buildhistory_write_sigs() {
     if not "task" in (d.getVar('BUILDHISTORY_FEATURES') or "").split():
@@ -950,23 +953,19 @@ def write_latest_srcrev(d, pkghistdir):
                         value = value.replace('"', '').strip()
                         old_tag_srcrevs[key] = value
         with open(srcrevfile, 'w') as f:
-            orig_srcrev = d.getVar('SRCREV', False) or 'INVALID'
-            if orig_srcrev != 'INVALID':
-                f.write('# SRCREV = "%s"\n' % orig_srcrev)
-            if len(srcrevs) > 1:
-                for name, srcrev in sorted(srcrevs.items()):
-                    orig_srcrev = d.getVar('SRCREV_%s' % name, False)
-                    if orig_srcrev:
-                        f.write('# SRCREV_%s = "%s"\n' % (name, orig_srcrev))
-                    f.write('SRCREV_%s = "%s"\n' % (name, srcrev))
-            else:
-                f.write('SRCREV = "%s"\n' % next(iter(srcrevs.values())))
-            if len(tag_srcrevs) > 0:
-                for name, srcrev in sorted(tag_srcrevs.items()):
-                    f.write('# tag_%s = "%s"\n' % (name, srcrev))
-                    if name in old_tag_srcrevs and old_tag_srcrevs[name] != srcrev:
-                        pkg = d.getVar('PN')
-                        bb.warn("Revision for tag %s in package %s was changed since last build (from %s to %s)" % (name, pkg, old_tag_srcrevs[name], srcrev))
+            for name, srcrev in sorted(srcrevs.items()):
+                suffix = "_" + name
+                if name == "default":
+                    suffix = ""
+                orig_srcrev = d.getVar('SRCREV%s' % suffix, False)
+                if orig_srcrev:
+                    f.write('# SRCREV%s = "%s"\n' % (suffix, orig_srcrev))
+                f.write('SRCREV%s = "%s"\n' % (suffix, srcrev))
+            for name, srcrev in sorted(tag_srcrevs.items()):
+                f.write('# tag_%s = "%s"\n' % (name, srcrev))
+                if name in old_tag_srcrevs and old_tag_srcrevs[name] != srcrev:
+                    pkg = d.getVar('PN')
+                    bb.warn("Revision for tag %s in package %s was changed since last build (from %s to %s)" % (name, pkg, old_tag_srcrevs[name], srcrev))
 
     else:
         if os.path.exists(srcrevfile):
