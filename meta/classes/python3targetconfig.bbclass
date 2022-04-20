@@ -16,14 +16,14 @@ do_install_prepend_class-target() {
         export _PYTHON_SYSCONFIGDATA_NAME="_sysconfigdata"
 }
 
-do_configure:prepend:class-nativesdk() {
+do_configure_prepend_class-nativesdk() {
         export _PYTHON_SYSCONFIGDATA_NAME="_sysconfigdata"
 }
 
-do_compile:prepend:class-nativesdk() {
+do_compile_prepend_class-nativesdk() {
         export _PYTHON_SYSCONFIGDATA_NAME="_sysconfigdata"
 }
 
-do_install:prepend:class-nativesdk() {
+do_install_prepend_class-nativesdk() {
         export _PYTHON_SYSCONFIGDATA_NAME="_sysconfigdata"
 }
