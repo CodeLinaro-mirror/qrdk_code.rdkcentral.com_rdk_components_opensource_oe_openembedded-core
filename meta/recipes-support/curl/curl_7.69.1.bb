@@ -14,8 +14,6 @@ SRC_URI = "https://curl.haxx.se/download/curl-${PV}.tar.bz2 \
            file://CVE-2020-8169.patch \
            file://CVE-2020-8177.patch \
            file://CVE-2020-8284.patch \
-           file://CVE-2020-8285.patch \
-           file://CVE-2020-8286.patch \
            file://CVE-2021-22876.patch \
            file://CVE-2021-22890.patch \
            file://CVE-2021-22898.patch \
