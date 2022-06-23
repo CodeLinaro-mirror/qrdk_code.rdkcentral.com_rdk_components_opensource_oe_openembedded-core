@@ -154,6 +154,10 @@ do_install_append() {
 	ln -sf newgrp.${BPN} ${D}${bindir}/sg
 }
 
+do_install_append_broadband() {
+	sed -i 's/UMASK		022/UMASK		027/' ${D}${sysconfdir}/login.defs
+}
+
 PACKAGES =+ "${PN}-base"
 FILES_${PN}-base = "\
     ${base_bindir}/login.shadow \

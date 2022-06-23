@@ -8,6 +8,7 @@ test -z "$TERM" && TERM="vt100"	# Basic terminal capab. For screen etc.
 if [ "$HOME" = "ROOTHOME" ]; then
    PATH=$PATH:/usr/local/sbin:/usr/sbin:/sbin
 fi
+. /etc/device.properties
 if [ "$PS1" ]; then
 # works for bash and ash (no other shells known to be in use here)
    PS1='\u@\h:\w\$ '
@@ -31,5 +32,8 @@ if [ -x /usr/bin/resize ] && termpath="`tty`"; then
 fi
 
 export PATH PS1 OPIEDIR QPEDIR QTDIR EDITOR TERM
-
-umask 022
+if [ "$DEVICE_TYPE" = "broadband" ]; then
+     umask 027
+else
+     umask 022
+fi
