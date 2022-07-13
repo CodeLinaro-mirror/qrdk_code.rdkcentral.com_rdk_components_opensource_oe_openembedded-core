@@ -19,6 +19,7 @@ if [ -d /etc/profile.d ]; then
 	done
 	unset i
 fi
+. /etc/device.properties
 
 # Make sure we are on a serial console (i.e. the device used starts with
 # /dev/tty[A-z]), otherwise we confuse e.g. the eclipse launcher which tries do
@@ -28,5 +29,8 @@ case $(tty 2>/dev/null) in
 esac
 
 export PATH PS1 OPIEDIR QPEDIR QTDIR EDITOR TERM
-
-umask 022
+if [ "$DEVICE_TYPE" = "broadband" ]; then
+     umask 027
+else
+     umask 022
+fi

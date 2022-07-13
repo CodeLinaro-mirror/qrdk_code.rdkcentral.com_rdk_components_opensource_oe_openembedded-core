@@ -121,6 +121,11 @@ do_install() {
 	sed -i 's,^GROUP=1000,GROUP=100,g' ${D}${sysconfdir}/default/useradd
 }
 
+do_install_append_broadband() {
+	sed -i 's/UMASK		022/UMASK		027/' ${D}${sysconfdir}/login.defs
+}
+
+
 do_install_append() {
 	# Ensure that the image has as a /var/spool/mail dir so shadow can
 	# put mailboxes there if the user reconfigures shadow to its
