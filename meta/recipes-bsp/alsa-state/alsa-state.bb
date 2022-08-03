@@ -48,7 +48,8 @@ do_install() {
 }
 
 PACKAGES += "alsa-states"
-
+ALLOW_EMPTY_${PN} = "1"
+ALLOW_EMPTY_${PN}-dev = "1"
 RRECOMMENDS_alsa-state = "alsa-states"
 
 RDEPENDS_${PN} = "alsa-utils-alsactl"

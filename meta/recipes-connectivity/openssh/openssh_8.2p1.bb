@@ -1,6 +1,6 @@
 SUMMARY = "A suite of security-related network utilities based on \
 the SSH protocol including the ssh client and sshd server"
-DESCRIPTION = "Secure rlogin/rsh/rcp/telnet replacement (OpenSSH) \
+DESCRIPTION = "Secure rlogin/rsh/rcp/telnet replacement () \
 Ssh (Secure Shell) is a program for logging into a remote machine \
 and for executing commands on a remote machine."
 HOMEPAGE = "http://www.openssh.com/"
@@ -44,6 +44,9 @@ INITSCRIPT_PARAMS_${PN}-sshd = "defaults 9"
 
 SYSTEMD_PACKAGES = "${PN}-sshd"
 SYSTEMD_SERVICE_${PN}-sshd = "sshd.socket"
+
+RPROVIDES_${PN} = " ${PN}-dev "
+PACKAGES_remove = "${PN}-dev"
 
 inherit autotools-brokensep ptest
 
@@ -142,7 +145,7 @@ do_install_ptest () {
 	cp -r regress ${D}${PTEST_PATH}
 }
 
-ALLOW_EMPTY_${PN} = "1"
+#ALLOW_EMPTY_${PN} = "1"
 
 PACKAGES =+ "${PN}-keygen ${PN}-scp ${PN}-ssh ${PN}-sshd ${PN}-sftp ${PN}-misc ${PN}-sftp-server"
 FILES_${PN}-scp = "${bindir}/scp.${BPN}"
@@ -164,9 +167,11 @@ RRECOMMENDS_${PN}-sshd_append_class-target = "\
 # gdb would make attach-ptrace test pass rather than skip but not worth the build dependencies
 RDEPENDS_${PN}-ptest += "${PN}-sftp ${PN}-misc ${PN}-sftp-server make sed sudo coreutils"
 
+
 # dev package depends on default package, which is empty and thus has issue while generating sdk.
 RDEPENDS_${PN}-dev = ""
 
+ALLOW_EMPTY_${PN}-dev = "1"
 RPROVIDES_${PN}-ssh = "ssh"
 RPROVIDES_${PN}-sshd = "sshd"
 

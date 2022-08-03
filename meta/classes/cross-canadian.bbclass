@@ -91,8 +91,9 @@ python () {
         vendors = all_multilib_tune_values(d, 'TARGET_VENDOR')
     origvendor = d.getVar("TARGET_VENDOR_MULTILIB_ORIGINAL")
     if origvendor:
-        d.setVar("TARGET_VENDOR", origvendor)
+        #d.setVar("TARGET_VENDOR", origvendor)
         if origvendor not in vendors.split():
+            d.setVar("TARGET_VENDOR", vendors)
             vendors = origvendor + " " + vendors
     d.setVar("CANADIANEXTRAVENDOR", vendors)
 }
