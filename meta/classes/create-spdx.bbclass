@@ -12,6 +12,8 @@ CVE_VERSION ??= "${PV}"
 SPDXDIR ??= "${WORKDIR}/spdx"
 SPDXDEPLOY = "${SPDXDIR}/deploy"
 SPDXWORK = "${SPDXDIR}/work"
+VENDOR_SPDX_LIST = "${DEPLOY_DIR_SPDX}/vendor_spdx_list"
+VENDOR_DEPLOYDIR = "${DEPLOY_DIR_SPDX}/vendor_spdx"
 
 SPDX_TOOL_NAME ??= "oe-spdx-creator"
 SPDX_TOOL_VERSION ??= "1.0"
@@ -398,6 +400,23 @@ def collect_dep_sources(d, dep_recipes):
     return sources
 
 
+def copy_spdx_files(d, src_dir, dest_dir):
+    import os
+    from pathlib import Path
+
+    for root, dirs, files in os.walk(src_dir):
+        for dir in dirs:
+            for file in os.listdir(os.path.join(root, dir)):
+                src = os.path.join(root, dir, file)
+                dest = os.path.join(dest_dir, dir, file)
+                Path(dest).parent.mkdir(exist_ok=True, parents=True)
+
+                if os.path.exists(dest):
+                    continue
+
+                os.popen(f"cp {src} {dest}")
+
+
 python do_create_spdx() {
     from datetime import datetime, timezone
     import oe.sbom
@@ -406,6 +425,7 @@ python do_create_spdx() {
     from pathlib import Path
     from contextlib import contextmanager
     import oe.cve_check
+    import os
 
     @contextmanager
     def optional_tarfile(name, guard, mode="w"):
@@ -429,6 +449,7 @@ python do_create_spdx() {
     include_sources = d.getVar("SPDX_INCLUDE_SOURCES") == "1"
     archive_sources = d.getVar("SPDX_ARCHIVE_SOURCES") == "1"
     archive_packaged = d.getVar("SPDX_ARCHIVE_PACKAGED") == "1"
+    workdir = Path(d.getVar("WORKDIR"))
 
     creation_time = datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -516,6 +537,41 @@ python do_create_spdx() {
                 recipe.packageFileName = str(recipe_archive.name)
 
     dep_recipes = collect_dep_recipes(d, doc, recipe)
+
+    vendor_spdx = ""
+    for file in os.listdir(workdir):
+        if file.endswith("-spdx"):
+            vendor_spdx = file
+            break
+
+    if len(vendor_spdx) != 0:
+        vendor_spdx_dir = workdir / vendor_spdx
+        vendor_recipe = vendor_spdx[:-5]
+        vendor_deploydir = Path(d.getVar("VENDOR_DEPLOYDIR"))
+        copy_spdx_files(d, vendor_spdx_dir, vendor_deploydir)
+
+        vendor_list_spdx = d.getVar("VENDOR_SPDX_LIST")
+
+        dep_recipe_path = vendor_deploydir / "recipes" / ("recipe-%s.spdx.json" % vendor_recipe)
+
+        vendor_dep_doc, vendor_dep_sha1 = oe.sbom.read_doc(dep_recipe_path)
+
+        vendor_recipe_ref = oe.spdx.SPDXExternalDocumentRef()
+        vendor_recipe_ref.externalDocumentId = "DocumentRef-dependency-" + vendor_dep_doc.name
+        vendor_recipe_ref.spdxDocument = vendor_dep_doc.documentNamespace
+        vendor_recipe_ref.checksum.algorithm = "SHA1"
+        vendor_recipe_ref.checksum.checksumValue = vendor_dep_sha1
+
+        doc.externalDocumentRefs.append(vendor_recipe_ref)
+
+        doc.add_relationship(
+            "%s:%s" % (vendor_recipe_ref.externalDocumentId, vendor_dep_doc.SPDXID),
+            "BUILD_DEPENDENCY_OF",
+            recipe
+        )
+
+        with open(vendor_list_spdx, "a+") as file:
+            file.write(vendor_recipe + "\n")
 
     doc_sha1 = oe.sbom.write_doc(d, doc, "recipes")
     dep_recipes.append(oe.sbom.DepRecipe(doc, doc_sha1, recipe))
@@ -838,6 +894,12 @@ python image_combine_spdx() {
     img_spdxid = oe.sbom.get_image_spdxid(image_name)
     packages = image_list_installed_packages(d)
 
+    vendor_list_spdx = d.getVar("VENDOR_SPDX_LIST")
+    if os.path.exists(vendor_list_spdx):
+        with open(vendor_list_spdx, "r") as file:
+            for name in file:
+                packages[name.strip()] = None
+
     combine_spdx(d, image_name, imgdeploydir, img_spdxid, packages)
 
     if image_link_name:
@@ -907,6 +969,8 @@ def combine_spdx(d, rootfs_name, rootfs_deploydir, rootfs_spdxid, packages):
     image.packageSupplier = d.getVar("SPDX_SUPPLIER")
 
     doc.packages.append(image)
+
+    copy_spdx_files(d, Path(d.getVar("VENDOR_DEPLOYDIR")), deploy_dir_spdx)
 
     for name in sorted(packages.keys()):
         pkg_spdx_path = deploy_dir_spdx / "packages" / (name + ".spdx.json")
