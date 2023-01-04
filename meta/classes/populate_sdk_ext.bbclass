@@ -472,18 +472,30 @@ python copy_buildsystem () {
 
     if sdk_include_toolchain:
         lockedsigs_base = d.getVar('WORKDIR') + '/locked-sigs-base2.inc'
-        lockedsigs_toolchain = d.expand("${STAGING_DIR}/${TUNE_PKGARCH}/meta-extsdk-toolchain/locked-sigs/locked-sigs-extsdk-toolchain.inc")
+        
+        #To change the value of TUNE_PKGARCH if the path doesn't exist
+        mlprefix=d.getVar("MLPREFIX", True) 
+        
+        if mlprefix!='lib32-':
+            package_arch = d.getVar('TUNE_PKGARCH')
+        else :
+            package_arch = d.getVar('TUNE_PKGARCH_64')
+            
+        lockedsigs_toolchain = d.expand("${STAGING_DIR}/") + package_arch + "/meta-extsdk-toolchain/locked-sigs/locked-sigs-extsdk-toolchain.inc"
+
         shutil.move(lockedsigs_pruned, lockedsigs_base)
+        
         oe.copy_buildsystem.merge_lockedsigs([],
                                              lockedsigs_base,
                                              lockedsigs_toolchain,
                                              lockedsigs_pruned)
+        
         oe.copy_buildsystem.create_locked_sstate_cache(lockedsigs_toolchain,
                                                        d.getVar('SSTATE_DIR'),
                                                        sstate_out, d,
                                                        fixedlsbstring,
                                                        filterfile=tasklistfn)
-
+       
     if sdk_ext_type == 'minimal':
         if derivative:
             # Assume the user is not going to set up an additional sstate
@@ -656,12 +668,27 @@ sdk_ext_postinst() {
 		# the buildtools-tarball tools in their path.
 		echo ". $target_sdk_dir/buildtools/environment-setup*" >> $env_setup_script
 	fi
-
+        echo "#Interpreter path may point to default SDKPATHNATIVE, we need to set it properly" >> $env_setup_script
+        echo 'sdk_interpreter=""'  >> $env_setup_script
+        echo "patchelf_tool=\$OECORE_NATIVE_SYSROOT/usr/bin/patchelf" >> $env_setup_script
+        echo "basename_tool=\$OECORE_NATIVE_SYSROOT/usr/bin/basename" >> $env_setup_script
+        echo "for file in $target_sdk_dir/sysroots/${SDK_SYS}/usr/bin/*; do" >> $env_setup_script 
+        echo '        if  `file "$file" | grep -q "ELF"` ; then' >> $env_setup_script
+	echo '             sdk_interpreter=`"$patchelf_tool" --print-interpreter "$file"`'  >> $env_setup_script
+	echo '             sdk_interpreter=`"$basename_tool" "$sdk_interpreter"`'  >> $env_setup_script
+	echo "             sdk_interpreter=$target_sdk_dir/buildtools/sysroots/${SDK_SYS}/lib/\$sdk_interpreter"  >> $env_setup_script
+        echo '            "$patchelf_tool" --set-interpreter "$sdk_interpreter"  "$file"' >> $env_setup_script
+        echo '        fi'  >> $env_setup_script
+        echo 'done'  >> $env_setup_script
 	# Allow bitbake environment setup to be ran as part of this sdk.
 	echo "export OE_SKIP_SDK_CHECK=1" >> $env_setup_script
 	# Work around runqemu not knowing how to get this information within the eSDK
 	echo "export DEPLOY_DIR_IMAGE=$target_sdk_dir/tmp/${@os.path.relpath(d.getVar('DEPLOY_DIR_IMAGE'), d.getVar('TMPDIR'))}" >> $env_setup_script
-
+        echo 'CPC_CUSTOM_STAMP=`/bin/date -u +%Y%m%d%H%M%S`'  >> $env_setup_script
+        echo 'if grep -q "CPC_CUSTOM_STAMP" '$target_sdk_dir'/conf/local.conf; then'    >> $env_setup_script
+        echo   'sed -i '/CPC_CUSTOM_STAMP/d' '$target_sdk_dir'/conf/local.conf' >> $env_setup_script
+        echo ' fi '   >> $env_setup_script
+        echo ' echo CPC_CUSTOM_STAMP = \""$CPC_CUSTOM_STAMP"\"  >> '$target_sdk_dir'/conf/local.conf ' >>  $env_setup_script
 	# A bit of another hack, but we need this in the path only for devtool
 	# so put it at the end of $PATH.
 	echo "export PATH=$target_sdk_dir/sysroots/${SDK_SYS}${bindir_nativesdk}:\$PATH" >> $env_setup_script
