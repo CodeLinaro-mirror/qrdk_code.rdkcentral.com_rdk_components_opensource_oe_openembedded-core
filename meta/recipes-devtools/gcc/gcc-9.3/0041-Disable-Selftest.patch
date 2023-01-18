@@ -1,0 +1,56 @@
+--- a/gcc/Makefile.in	2022-08-30 20:05:52.566203864 +0000
++++ b/gcc/Makefile.in	2022-08-30 20:02:54.259826447 +0000
+@@ -1480,8 +1480,6 @@
+ 	sel-sched-ir.o \
+ 	sel-sched-dump.o \
+ 	sel-sched.o \
+-	selftest-rtl.o \
+-	selftest-run-tests.o \
+ 	sese.o \
+ 	shrink-wrap.o \
+ 	simplify-rtx.o \
+@@ -1623,13 +1621,13 @@
+ 	pretty-print.o intl.o \
+ 	sbitmap.o \
+ 	vec.o input.o version.o hash-table.o ggc-none.o memory-block.o \
+-	selftest.o selftest-diagnostic.o sort.o
++	sort.o
+ 
+ # Objects in libcommon-target.a, used by drivers and by the core
+ # compiler and containing target-dependent code.
+ OBJS-libcommon-target = $(common_out_object_file) prefix.o params.o \
+ 	opts.o opts-common.o options.o vec.o hooks.o common/common-targhooks.o \
+-	hash-table.o file-find.o spellcheck.o selftest.o opt-suggestions.o
++	hash-table.o file-find.o spellcheck.o opt-suggestions.o
+ 
+ # This lists all host objects for the front ends.
+ ALL_HOST_FRONTEND_OBJS = $(foreach v,$(CONFIG_LANGUAGES),$($(v)_OBJS))
+@@ -1912,10 +1910,10 @@
+ quickstrap: all
+ 	cd $(toplevel_builddir) && $(MAKE) all-target-libgcc
+ 
+-all.internal: start.encap rest.encap doc selftest
++all.internal: start.encap rest.encap doc
+ # This is what to compile if making a cross-compiler.
+ all.cross: native gcc-cross$(exeext) cpp$(exeext) specs \
+-	libgcc-support lang.all.cross doc selftest @GENINSRC@ srcextra
++	libgcc-support lang.all.cross doc @GENINSRC@ srcextra
+ # This is what must be made before installing GCC and converting libraries.
+ start.encap: native xgcc$(exeext) cpp$(exeext) specs \
+ 	libgcc-support lang.start.encap @GENINSRC@ srcextra
+@@ -1956,13 +1954,13 @@
+ # so that self-test failures are caught as early as possible.
+ # Use "s-selftest-FE" to ensure that we only run the selftests if the
+ # driver, frontend, or selftest data change.
+-.PHONY: selftest
++#.PHONY: selftest
+ 
+ # Potentially run all selftest-<LANG>.  The various <LANG>/Make-lang.in can
+ # require the selftests to be run by defining their selftest-<LANG> as
+ # s-selftest-<LANG>.  Otherwise, they should define it as empty.
+ 
+-SELFTEST_TARGETS = @selftest_languages@
++SELFTEST_TARGETS =
+ selftest: $(SELFTEST_TARGETS)
+ 
+ # Recompile all the language-independent object files.

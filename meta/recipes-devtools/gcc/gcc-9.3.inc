@@ -74,6 +74,7 @@ SRC_URI = "\
            file://0003-aarch64-Mitigate-SLS-for-BLR-instruction.patch \
            file://0001-Backport-fix-for-PR-tree-optimization-97236-fix-bad-.patch \
            file://0040-GCOV-do-not-mangle-.gcno-files.patch \
+           file://0041-Disable-Selftest.patch \
 "
 S = "${TMPDIR}/work-shared/gcc-${PV}-${PR}/gcc-${PV}"
 SRC_URI[sha256sum] = "71e197867611f6054aa1119b13a0c0abac12834765fe2d81f35ac57f84f742d1"
