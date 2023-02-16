@@ -775,10 +775,20 @@ def modify(args, config, basepath, workspace):
     import oe.path
 
     if args.recipename in workspace:
-        raise DevtoolError("recipe %s is already in your workspace" %
+        if args.subparser_name == 'modify':
+            raise DevtoolError("recipe %s is already in your workspace" %
                            args.recipename)
+        else:
+            logger.warning("recipe %s is already in your workspace" % args.recipename)
+            return 1
 
-    tinfoil = setup_tinfoil(basepath=basepath, tracking=True)
+    args.tinfoil = getattr(args, 'tinfoil', False)
+
+    if args.tinfoil:
+        tinfoil = args.tinfoil
+    else:
+        tinfoil = setup_tinfoil(basepath=basepath, tracking=True)
+
     try:
         rd = parse_recipe(config, tinfoil, args.recipename, True)
         if not rd:
@@ -788,8 +798,12 @@ def modify(args, config, basepath, workspace):
         if pn != args.recipename:
             logger.info('Mapping %s to %s' % (args.recipename, pn))
         if pn in workspace:
-            raise DevtoolError("recipe %s is already in your workspace" %
+            if args.subparser_name == 'modify':
+                raise DevtoolError("recipe %s is already in your workspace" %
                             pn)
+            else:
+                logger.warning("recipe %s is already in your workspace" % pn)
+                return 1
 
         if args.srctree:
             srctree = os.path.abspath(args.srctree)
@@ -797,17 +811,30 @@ def modify(args, config, basepath, workspace):
             srctree = get_default_srctree(config, pn)
 
         if args.no_extract and not os.path.isdir(srctree):
-            raise DevtoolError("--no-extract specified and source path %s does "
+            if args.subparser_name == 'modify':
+                raise DevtoolError("--no-extract specified and source path %s does "
                             "not exist or is not a directory" %
                             srctree)
+            else:
+                logger.warning("--no-extract specified and source path %s does "
+                            "not exist or is not a directory" %
+                            srctree)
+                return 1
 
         recipefile = rd.getVar('FILE')
         appendfile = recipe_to_append(recipefile, config, args.wildcard)
         if os.path.exists(appendfile):
-            raise DevtoolError("Another variant of recipe %s is already in your "
+            if args.subparser_name == 'modify':
+                raise DevtoolError("Another variant of recipe %s is already in your "
                             "workspace (only one variant of a recipe can "
                             "currently be worked on at once)"
                             % pn)
+            else:
+                logger.warning("Another variant of recipe %s is already in your "
+                            "workspace (only one variant of a recipe can "
+                            "currently be worked on at once)"
+                            % pn)
+                return 1
 
         _check_compatible_recipe(pn, rd)
 
@@ -983,10 +1010,129 @@ def modify(args, config, basepath, workspace):
         logger.info('Recipe %s now set up to build from %s' % (pn, srctree))
 
     finally:
-        tinfoil.shutdown()
+        if not args.tinfoil:
+            tinfoil.shutdown()
 
     return 0
 
+def read_workspace(basepath):
+    workspace = {}
+
+    workspace_path = os.path.join(basepath, 'workspace')
+    externalsrc_re = re.compile(r'^EXTERNALSRC(_pn-([^ =]+))? *= *"([^"]*)"$')
+    for fn in glob.glob(os.path.join(workspace_path, 'appends', '*.bbappend')):
+        with open(fn, 'r') as f:
+            pnvalues = {}
+            for line in f:
+                res = externalsrc_re.match(line.rstrip())
+                if res:
+                    recipepn = os.path.splitext(os.path.basename(fn))[0].split('_')[0]
+                    pn = res.group(2) or recipepn
+                    # Find the recipe file within the workspace, if any
+                    bbfile = os.path.basename(fn).replace('.bbappend', '.bb').replace('%', '*')
+                    recipefile = glob.glob(os.path.join(workspace_path,
+                                                        'recipes',
+                                                        recipepn,
+                                                        bbfile))
+                    if recipefile:
+                        recipefile = recipefile[0]
+                    pnvalues['srctree'] = res.group(3)
+                    pnvalues['bbappend'] = fn
+                    pnvalues['recipefile'] = recipefile
+                elif line.startswith('# srctreebase: '):
+                    pnvalues['srctreebase'] = line.split(':', 1)[1].strip()
+            if pnvalues:
+                if not pnvalues.get('srctreebase', None):
+                    pnvalues['srctreebase'] = pnvalues['srctree']
+                workspace[pn] = pnvalues
+
+    return workspace
+
+def lookup_recipe(pkgdata_dir, pkg):
+    def parse_pkgdatafile(pkgdatafile):
+        recipe = ''
+        found = False
+        with open(pkgdatafile, 'r') as f:
+            for line in f:
+                if line.startswith('PN:'):
+                    recipe = line.split(':', 1)[1].strip()
+                    found = True
+                    break
+        return (found, recipe)
+
+    providepkgpath = os.path.join(pkgdata_dir, "runtime-rprovides", pkg)
+    if os.path.exists(providepkgpath):
+        for f in os.listdir(providepkgpath):
+            if f != pkg:
+                logger.info("%s is in the RPROVIDES of %s:" % (pkg, f))
+            pkgdatafile = os.path.join(pkgdata_dir, "runtime", f)
+            found, recipe = parse_pkgdatafile(pkgdatafile)
+            if found:
+                return recipe
+
+    pkgdatafile = os.path.join(pkgdata_dir, 'runtime-reverse', pkg)
+    if os.path.exists(pkgdatafile):
+        found, recipe = parse_pkgdatafile(pkgdatafile)
+        if found:
+            return recipe
+    else:
+        raise DevtoolError("The following package could not be found: %s" % pkg)
+
+def modify_group(args, config, basepath, workspace):
+    """Entry point for the devtool 'modify-group' subcommand"""
+    import bb
+
+    def populate_recipe_list(config, tinfoil, packagegroupname):
+        d = parse_recipe(config, tinfoil, packagegroupname, True)
+        if not d:
+            return 1
+        rdepends_pn = d.getVar('RDEPENDS_%s' % packagegroupname)
+        for pkg in rdepends_pn.split():
+            pkgdata_dir = d.getVar('PKGDATA_DIR')
+            recipe = lookup_recipe(pkgdata_dir, pkg)
+            if recipe != '':
+                pd = parse_recipe(config, tinfoil, recipe, True)
+                if not pd:
+                    return 1
+                if bb.data.inherits_class('packagegroup', pd):
+                    logger.info("%s is a packagegroup" % recipe)
+                    if populate_recipe_list(config, tinfoil, recipe):
+                        raise DevtoolError('Not able to fetch recipe list for %s' % recipe)
+                else:
+                    logger.info("%s provides %s package" % (recipe, pkg))
+                    if recipe not in recipe_list:
+                        recipe_list.append(recipe)
+            else:
+                raise DevtoolError("Not able to fetch recipe for %s package" % pkg)
+
+
+    recipe_list = []
+    tinfoil = setup_tinfoil(basepath=basepath, tracking=True)
+
+    try:
+        pgd = parse_recipe(config, tinfoil, args.packagegroupname, True)
+        if not pgd:
+            raise DevtoolError('Not able to parse recipe %s' % args.packagegroupname)
+        if bb.data.inherits_class('packagegroup', pgd):
+            logger.info("%s is a valid packagegroup" % args.packagegroupname)
+            if populate_recipe_list(config, tinfoil, args.packagegroupname):
+                raise DevtoolError('Not able to fetch recipe list for %s' % args.packagegroupname)
+            logger.info("List of recipes to be modified for the packagegroup %s:\n[%s]" % (args.packagegroupname, recipe_list))
+            args.tinfoil = tinfoil
+        else:
+            raise DevtoolError('%s is not a valid packagegroup' % args.packagegroupname)
+
+        for item in recipe_list:
+            logger.info("Calling devtool modify for %s recipe" % item)
+            args.recipename  = item
+            workspace = read_workspace(basepath)
+            if modify(args, config, basepath, workspace):
+                logger.warning("devtool modify for %s recipe not successful" % item)
+
+    finally:
+        tinfoil.shutdown()
+
+    return 0
 
 def rename(args, config, basepath, workspace):
     """Entry point for the devtool 'rename' subcommand"""
@@ -2250,6 +2396,23 @@ def register_commands(subparsers, context):
     parser_modify.add_argument('--no-overrides', '-O', action="store_true", help='Do not create branches for other override configurations')
     parser_modify.add_argument('--keep-temp', help='Keep temporary directory (for debugging)', action="store_true")
     parser_modify.set_defaults(func=modify, fixed_setup=context.fixed_setup)
+
+    parser_modify_group = subparsers.add_parser('modify-group', help='Modify the source for an existing packagegroup',
+                                       description='Sets up the build environment to modify the source for an existing packagegroup. The default behaviour is to extract the source being fetched by the recipes in the packagegroup into a git tree so you can work on it; alternatively if you already have your own pre-prepared source tree you can specify -n/--no-extract.',
+                                       group='starting', order=90)
+    parser_modify_group.add_argument('packagegroupname', help='Name of existing packagegroup to edit (just name - no version, path or extension)')
+    parser_modify_group.add_argument('srctree', nargs='?', help='Path to external source tree. If not specified, a subdirectory of %s will be used.' % defsrctree)
+    parser_modify_group.add_argument('--wildcard', '-w', action="store_true", help='Use wildcard for unversioned bbappend')
+    group = parser_modify_group.add_mutually_exclusive_group()
+    group.add_argument('--extract', '-x', action="store_true", help='Extract source for recipes in packagegroup (default)')
+    group.add_argument('--no-extract', '-n', action="store_true", help='Do not extract source, expect it to exist')
+    group = parser_modify_group.add_mutually_exclusive_group()
+    group.add_argument('--same-dir', '-s', help='Build in same directory as source', action="store_true")
+    group.add_argument('--no-same-dir', help='Force build in a separate build directory', action="store_true")
+    parser_modify_group.add_argument('--branch', '-b', default="devtool", help='Name for development branch to checkout (when not using -n/--no-extract) (default "%(default)s")')
+    parser_modify_group.add_argument('--no-overrides', '-O', action="store_true", help='Do not create branches for other override configurations')
+    parser_modify_group.add_argument('--keep-temp', help='Keep temporary directory (for debugging)', action="store_true")
+    parser_modify_group.set_defaults(func=modify_group, fixed_setup=context.fixed_setup)
 
     parser_extract = subparsers.add_parser('extract', help='Extract the source for an existing recipe',
                                        description='Extracts the source for an existing recipe',

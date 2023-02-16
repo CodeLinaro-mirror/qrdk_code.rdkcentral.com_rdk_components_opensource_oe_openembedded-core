@@ -75,6 +75,8 @@ python () {
 
         # Dummy value because the default function can't be called with blank SRC_URI
         d.setVar('SRCPV', '999')
+        if d.getVar('UNLOCK_RECIPE_DEPS') == 'false':
+            d.setVar('SRCPV', d.getVar('SRCPV') or '999')
 
         if d.getVar('CONFIGUREOPT_DEPTRACK') == '--disable-dependency-tracking':
             d.setVar('CONFIGUREOPT_DEPTRACK', '')
