@@ -97,6 +97,9 @@ do_install() {
 	# Enable CREATE_HOME by default.
 	sed -i 's/#CREATE_HOME/CREATE_HOME/g' ${D}${sysconfdir}/login.defs
 
+        # setting umask value as 027
+	sed -i 's/UMASK		022/UMASK		027/' ${D}${sysconfdir}/login.defs
+
 	# As we are on an embedded system, ensure the users mailbox is in
 	# ~/ not /var/spool/mail by default, as who knows where or how big
 	# /var is. The system MDA will set this later anyway.

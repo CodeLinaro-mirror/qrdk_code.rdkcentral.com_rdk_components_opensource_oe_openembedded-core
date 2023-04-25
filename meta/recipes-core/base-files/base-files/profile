@@ -29,8 +29,6 @@ case $(tty 2>/dev/null) in
 esac
 
 export PATH PS1 OPIEDIR QPEDIR QTDIR EDITOR TERM
-if [ "$DEVICE_TYPE" = "broadband" ]; then
-     umask 027
-else
-     umask 022
-fi
+
+umask 027
+
