@@ -1,0 +1,12 @@
+Index: gcc-9.3.0/libsanitizer/configure.tgt
+===================================================================
+--- gcc-9.3.0.orig/libsanitizer/configure.tgt
++++ gcc-9.3.0/libsanitizer/configure.tgt
+@@ -46,6 +46,7 @@ case "${target}" in
+   sparc*-*-solaris2.11*)
+ 	;;
+   arm*-*-linux*)
++        LSAN_SUPPORTED=yes
+ 	;;
+   mips*64*-*-linux*)
+ 	# This clause is only here to not match the supported mips*-*-linux*.
