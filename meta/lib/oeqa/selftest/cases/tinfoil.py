@@ -65,6 +65,20 @@ class TinfoilTests(OESelftestTestCase):
             localdata.setVar('PN', 'hello')
             self.assertEqual('hello', localdata.getVar('BPN'))
 
+    # The config_data API tp parse_recipe_file is used by:
+    # layerindex-web layerindex/update_layer.py
+    def test_parse_recipe_custom_data(self):
+        with bb.tinfoil.Tinfoil() as tinfoil:
+            tinfoil.prepare(config_only=False, quiet=2)
+            localdata = bb.data.createCopy(tinfoil.config_data)
+            localdata.setVar("TESTVAR", "testval")
+            testrecipe = 'mdadm'
+            best = tinfoil.find_best_provider(testrecipe)
+            if not best:
+                self.fail('Unable to find recipe providing %s' % testrecipe)
+            rd = tinfoil.parse_recipe_file(best[3], config_data=localdata)
+            self.assertEqual("testval", rd.getVar('TESTVAR'))
+
     def test_list_recipes(self):
         with bb.tinfoil.Tinfoil() as tinfoil:
             tinfoil.prepare(config_only=False, quiet=2)
@@ -87,23 +101,22 @@ class TinfoilTests(OESelftestTestCase):
         with bb.tinfoil.Tinfoil() as tinfoil:
             tinfoil.prepare(config_only=True)
 
-            tinfoil.set_event_mask(['bb.event.FilesMatchingFound', 'bb.command.CommandCompleted'])
+            tinfoil.set_event_mask(['bb.event.FilesMatchingFound', 'bb.command.CommandCompleted', 'bb.command.CommandFailed', 'bb.command.CommandExit'])
 
             # Need to drain events otherwise events that were masked may still be in the queue
             while tinfoil.wait_event():
                 pass
 
             pattern = 'conf'
-            res = tinfoil.run_command('findFilesMatchingInDir', pattern, 'conf/machine')
+            res = tinfoil.run_command('testCookerCommandEvent', pattern, handle_events=False)
             self.assertTrue(res)
 
             eventreceived = False
             commandcomplete = False
             start = time.time()
-            # Wait for maximum 60s in total so we'd detect spurious heartbeat events for example
-            # The test is IO load sensitive too
+            # Wait for maximum 120s in total so we'd detect spurious heartbeat events for example
             while (not (eventreceived == True and commandcomplete == True) 
-                    and (time.time() - start < 60)):
+                    and (time.time() - start < 120)):
                 # if we received both events (on let's say a good day), we are done  
                 event = tinfoil.wait_event(1)
                 if event:
@@ -111,14 +124,15 @@ class TinfoilTests(OESelftestTestCase):
                         commandcomplete = True
                     elif isinstance(event, bb.event.FilesMatchingFound):
                         self.assertEqual(pattern, event._pattern)
-                        self.assertIn('qemuarm.conf', event._matches)
+                        self.assertIn('A', event._matches)
+                        self.assertIn('B', event._matches)
                         eventreceived = True
                     elif isinstance(event, logging.LogRecord):
                         continue
                     else:
                         self.fail('Unexpected event: %s' % event)
 
-            self.assertTrue(commandcomplete, 'Timed out waiting for CommandCompleted event from bitbake server')
+            self.assertTrue(commandcomplete, 'Timed out waiting for CommandCompleted event from bitbake server (Matching event received: %s)' % str(eventreceived))
             self.assertTrue(eventreceived, 'Did not receive FilesMatchingFound event from bitbake server')
 
     def test_setvariable_clean(self):

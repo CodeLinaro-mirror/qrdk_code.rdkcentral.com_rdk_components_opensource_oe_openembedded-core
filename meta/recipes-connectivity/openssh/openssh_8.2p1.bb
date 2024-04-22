@@ -5,7 +5,7 @@ Ssh (Secure Shell) is a program for logging into a remote machine \
 and for executing commands on a remote machine."
 HOMEPAGE = "http://www.openssh.com/"
 SECTION = "console/network"
-LICENSE = "BSD & ISC & MIT"
+LICENSE = "BSD-2-Clause & BSD-3-Clause & BSD-4-Clause & ISC & MIT"
 LIC_FILES_CHKSUM = "file://LICENCE;md5=18d9e5a8b3dd1790d73502f50426d4d3"
 
 DEPENDS = "zlib openssl virtual/crypt"
@@ -24,13 +24,62 @@ SRC_URI = "http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-${PV}.tar
            file://fix-potential-signed-overflow-in-pointer-arithmatic.patch \
            file://sshd_check_keys \
            file://add-test-support-for-busybox.patch \
+           file://CVE-2020-14145.patch \
+           file://CVE-2021-28041.patch \
+           file://CVE-2021-41617.patch \
+           file://CVE-2023-38408-01.patch \
+           file://CVE-2023-38408-02.patch \
+           file://CVE-2023-38408-03.patch \
+           file://CVE-2023-38408-04.patch \
+           file://CVE-2023-38408-05.patch \
+           file://CVE-2023-38408-06.patch \
+           file://CVE-2023-38408-07.patch \
+           file://CVE-2023-38408-08.patch \
+           file://CVE-2023-38408-09.patch \
+           file://CVE-2023-38408-10.patch \
+           file://CVE-2023-38408-11.patch \
+           file://CVE-2023-38408-12.patch \
+           file://CVE-2023-48795.patch \
+           file://CVE-2023-51385.patch \
            "
 SRC_URI[md5sum] = "3076e6413e8dbe56d33848c1054ac091"
 SRC_URI[sha256sum] = "43925151e6cf6cee1450190c0e9af4dc36b41c12737619edff8bcebdff64e671"
 
+# This CVE is specific to OpenSSH with the pam opie which we don't build/use here
+CVE_CHECK_WHITELIST += "CVE-2007-2768"
+
 # This CVE is specific to OpenSSH server, as used in Fedora and Red Hat Enterprise Linux 7
 # and when running in a Kerberos environment. As such it is not relevant to OpenEmbedded
 CVE_CHECK_WHITELIST += "CVE-2014-9278"
+
+# As per upstream, because of the way scp is based on a historical protocol called rcp
+# which relies on that style of argument passing and therefore encounters expansion
+# problems. Making changes to how the scp command line works breaks the pattern used
+# by scp consumers. Upstream therefore recommends the use of rsync in the place of
+# scp for better security. https://bugzilla.redhat.com/show_bug.cgi?id=1860487
+CVE_CHECK_WHITELIST += "CVE-2020-15778"
+
+# CVE-2008-3844 was reported in OpenSSH on Red Hat Enterprise Linux and
+# certain packages may have been compromised. This CVE is not applicable
+# as our source is OpenBSD. https://securitytracker.com/id?1020730
+# https://www.securityfocus.com/bid/30794
+CVE_CHECK_WHITELIST += "CVE-2008-3844"
+
+# openssh-ssh1 is provided for compatibility with old devices that
+# cannot be upgraded to modern protocols. Thus they may not provide security
+# support for this package because doing so would prevent access to equipment.
+# The upstream OpenSSH developers see this as an important
+# security feature and do not intend to 'fix' it.
+# https://security-tracker.debian.org/tracker/CVE-2016-20012
+# https://ubuntu.com/security/CVE-2016-20012
+CVE_CHECK_WHITELIST += "CVE-2016-20012"
+
+# As per debian, the issue is fixed by a feature called "agent restriction" in openssh 8.9
+# Urgency is unimportant as per debian, Hence this CVE is whitelisting.
+# https://security-tracker.debian.org/tracker/CVE-2021-36368
+# https://bugzilla.mindrot.org/show_bug.cgi?id=3316#c2
+# https://docs.ssh-mitm.at/trivialauth.html
+CVE_CHECK_WHITELIST += "CVE-2021-36368"
 
 PAM_SRC_URI = "file://sshd"
 
@@ -158,11 +207,16 @@ FILES_${PN}-sftp-server = "${libexecdir}/sftp-server"
 FILES_${PN}-misc = "${bindir}/ssh* ${libexecdir}/ssh*"
 FILES_${PN}-keygen = "${bindir}/ssh-keygen"
 
-RDEPENDS_${PN} += "${PN}-scp ${PN}-ssh ${PN}-sshd ${PN}-keygen"
+RDEPENDS_${PN} += "${PN}-scp ${PN}-ssh ${PN}-sshd ${PN}-keygen ${PN}-sftp-server"
 RDEPENDS_${PN}-sshd += "${PN}-keygen ${@bb.utils.contains('DISTRO_FEATURES', 'pam', 'pam-plugin-keyinit pam-plugin-loginuid', '', d)}"
 RRECOMMENDS_${PN}-sshd_append_class-target = "\
     ${@bb.utils.filter('PACKAGECONFIG', 'rng-tools', d)} \
 "
+
+# break dependency on base package for -dev package
+# otherwise SDK fails to build as the main openssh and dropbear packages
+# conflict with each other
+RDEPENDS:${PN}-dev = ""
 
 # gdb would make attach-ptrace test pass rather than skip but not worth the build dependencies
 RDEPENDS_${PN}-ptest += "${PN}-sftp ${PN}-misc ${PN}-sftp-server make sed sudo coreutils"

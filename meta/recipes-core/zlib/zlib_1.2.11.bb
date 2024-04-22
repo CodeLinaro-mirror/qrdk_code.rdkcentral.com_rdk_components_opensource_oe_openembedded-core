@@ -8,7 +8,10 @@ LIC_FILES_CHKSUM = "file://zlib.h;beginline=6;endline=23;md5=5377232268e952e9ef6
 
 SRC_URI = "${SOURCEFORGE_MIRROR}/libpng/${BPN}/${PV}/${BPN}-${PV}.tar.xz \
            file://ldflags-tests.patch \
+           file://CVE-2018-25032.patch \
            file://run-ptest \
+	    file://CVE-2022-37434.patch \
+           file://CVE-2023-45853.patch \
            "
 UPSTREAM_CHECK_URI = "http://zlib.net/"
 
@@ -50,3 +53,6 @@ do_install_append_class-target() {
 }
 
 BBCLASSEXTEND = "native nativesdk"
+
+# this CVE is for cloudflare zlib
+CVE_CHECK_WHITELIST += "CVE-2023-6992"

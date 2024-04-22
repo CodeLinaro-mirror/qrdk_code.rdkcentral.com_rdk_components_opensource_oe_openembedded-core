@@ -35,30 +35,146 @@ SRC_URI = "https://download.qemu.org/${BPN}-${PV}.tar.xz \
            file://CVE-2020-7039-2.patch \
            file://CVE-2020-7039-3.patch \
            file://0001-Add-enable-disable-udev.patch \
-	   file://CVE-2020-7211.patch \
-	   file://0001-qemu-Do-not-include-file-if-not-exists.patch \
+           file://CVE-2020-7211.patch \
+           file://0001-qemu-Do-not-include-file-if-not-exists.patch \
            file://CVE-2020-11102.patch \
-	   file://CVE-2020-11869.patch \
-	   file://CVE-2020-13361.patch \
-	   file://CVE-2020-10761.patch \
-	   file://CVE-2020-10702.patch \
-	   file://CVE-2020-13659.patch \
-	   file://CVE-2020-13800.patch \
-	   file://CVE-2020-13362.patch \
-	   file://CVE-2020-15863.patch \
-	   file://CVE-2020-14364.patch \
-	   file://CVE-2020-14415.patch \
-	   file://CVE-2020-16092.patch \
-	   file://0001-target-mips-Increase-number-of-TLB-entries-on-the-34.patch \
-	   file://CVE-2019-20175.patch \
-	   file://CVE-2020-24352.patch \
-	   file://CVE-2020-25723.patch \
-	   file://CVE-2021-20203.patch \
-	   "
+           file://CVE-2020-11869.patch \
+           file://CVE-2020-13361.patch \
+           file://CVE-2020-10761.patch \
+           file://CVE-2020-10702.patch \
+           file://CVE-2020-13659.patch \
+           file://CVE-2020-13800.patch \
+           file://CVE-2020-13362.patch \
+           file://CVE-2020-15863.patch \
+           file://CVE-2020-14364.patch \
+           file://CVE-2020-14415.patch \
+           file://CVE-2020-16092.patch \
+           file://0001-target-mips-Increase-number-of-TLB-entries-on-the-34.patch \
+           file://CVE-2019-20175.patch \
+           file://CVE-2020-24352.patch \
+           file://CVE-2020-25723.patch \
+           file://CVE-2021-20203.patch \
+           file://CVE-2021-3392.patch \
+           file://CVE-2020-25085.patch \
+           file://CVE-2020-25624_1.patch \
+           file://CVE-2020-25624_2.patch \
+           file://CVE-2020-25625.patch \
+           file://CVE-2020-29443.patch \
+           file://CVE-2021-20221.patch \
+           file://CVE-2021-20181.patch \
+           file://CVE-2021-3416_1.patch \
+           file://CVE-2021-3416_2.patch \
+           file://CVE-2021-3416_3.patch \
+           file://CVE-2021-3416_5.patch \
+           file://CVE-2021-3416_6.patch \
+           file://CVE-2021-3416_7.patch \
+           file://CVE-2021-3416_8.patch \
+           file://CVE-2021-3416_9.patch \
+           file://CVE-2021-3416_10.patch \
+           file://CVE-2021-20257.patch \
+           file://CVE-2021-3544.patch \
+           file://CVE-2021-3544_2.patch \
+           file://CVE-2021-3544_3.patch \
+           file://CVE-2021-3544_4.patch \
+           file://CVE-2021-3544_5.patch \
+           file://CVE-2021-3545.patch \
+           file://CVE-2021-3546.patch \
+           file://CVE-2021-3527-1.patch \
+           file://CVE-2021-3527-2.patch \
+           file://CVE-2021-3582.patch \
+           file://CVE-2021-3607.patch \
+           file://CVE-2021-3608.patch \
+           file://CVE-2020-12829_1.patch \
+           file://CVE-2020-12829_2.patch \
+           file://CVE-2020-12829_3.patch \
+           file://CVE-2020-12829_4.patch \
+           file://CVE-2020-12829_5.patch \
+           file://CVE-2020-27617.patch \
+           file://CVE-2020-28916.patch \
+           file://CVE-2021-3682.patch \
+           file://CVE-2020-13253_1.patch \
+           file://CVE-2020-13253_2.patch \
+           file://CVE-2020-13253_3.patch \
+           file://CVE-2020-13253_4.patch \
+           file://CVE-2020-13253_5.patch \
+           file://CVE-2020-13791.patch \
+           file://CVE-2022-35414.patch \
+           file://CVE-2020-27821.patch \
+           file://CVE-2020-13754-1.patch \
+           file://CVE-2020-13754-2.patch \
+           file://CVE-2020-13754-3.patch \
+           file://CVE-2020-13754-4.patch \
+           file://CVE-2021-3713.patch \
+           file://CVE-2021-3748.patch \
+           file://CVE-2021-3930.patch \
+           file://CVE-2021-4206.patch \
+           file://CVE-2021-4207.patch \
+           file://CVE-2022-0216-1.patch \
+           file://CVE-2022-0216-2.patch \
+           file://CVE-2021-3750.patch \
+           file://CVE-2021-3638.patch \
+           file://CVE-2021-20196.patch \
+           file://CVE-2021-3507.patch \
+           file://hw-block-nvme-refactor-nvme_addr_read.patch \
+           file://hw-block-nvme-handle-dma-errors.patch \
+           file://CVE-2021-3929.patch \
+           file://CVE-2022-4144.patch \
+           file://CVE-2020-15859.patch \
+           file://CVE-2020-15469-1.patch \
+           file://CVE-2020-15469-2.patch \
+           file://CVE-2020-15469-3.patch \
+           file://CVE-2020-15469-4.patch \
+           file://CVE-2020-15469-5.patch \
+           file://CVE-2020-15469-6.patch \
+           file://CVE-2020-15469-7.patch \
+           file://CVE-2020-15469-8.patch \
+           file://CVE-2020-35504.patch \
+           file://CVE-2020-35505.patch \
+           file://CVE-2022-26354.patch \
+           file://CVE-2021-3409-1.patch \
+           file://CVE-2021-3409-2.patch \
+           file://CVE-2021-3409-3.patch \
+           file://CVE-2021-3409-4.patch \
+           file://CVE-2021-3409-5.patch \
+           file://hw-display-qxl-Pass-requested-buffer-size-to-qxl_phy.patch \
+           file://CVE-2023-0330.patch \
+           file://CVE-2023-3354.patch \
+	   file://CVE-2023-3180.patch \
+           file://CVE-2020-24165.patch \
+           file://CVE-2023-5088.patch \
+           file://9pfs-local-ignore-O_NOATIME-if-we-don-t-have-permiss.patch \
+           file://CVE-2023-2861.patch \
+           "
 UPSTREAM_CHECK_REGEX = "qemu-(?P<pver>\d+(\.\d+)+)\.tar"
 
 SRC_URI[md5sum] = "278eeb294e4b497e79af7a57e660cb9a"
 SRC_URI[sha256sum] = "d3481d4108ce211a053ef15be69af1bdd9dde1510fda80d92be0f6c3e98768f0"
+
+# Applies against virglrender < 0.6.0 and not qemu itself
+CVE_CHECK_WHITELIST += "CVE-2017-5957"
+
+# The VNC server can expose host files uder some circumstances. We don't
+# enable it by default.
+CVE_CHECK_WHITELIST += "CVE-2007-0998"
+
+# 'The issues identified by this CVE were determined to not constitute a vulnerability.'
+# https://bugzilla.redhat.com/show_bug.cgi?id=1609015#c11
+CVE_CHECK_WHITELIST += "CVE-2018-18438"
+
+# the issue introduced in v5.1.0-rc0
+CVE_CHECK_WHITELIST += "CVE-2020-27661"
+
+# As per https://nvd.nist.gov/vuln/detail/CVE-2023-0664
+# https://bugzilla.redhat.com/show_bug.cgi?id=2167423
+# this bug related to windows specific.
+CVE_CHECK_WHITELIST += "CVE-2023-0664"
+
+# As per https://bugzilla.redhat.com/show_bug.cgi?id=2203387
+# RHEL specific issue
+CVE_CHECK_WHITELIST += "CVE-2023-2680"
+
+# Affected only `qemu-kvm` shipped with Red Hat Enterprise Linux 8.3 release.
+CVE_CHECK_WHITELIST += "CVE-2021-20295"
 
 COMPATIBLE_HOST_mipsarchn32 = "null"
 COMPATIBLE_HOST_mipsarchn64 = "null"
@@ -198,6 +314,16 @@ PACKAGECONFIG[glusterfs] = "--enable-glusterfs,--disable-glusterfs"
 PACKAGECONFIG[xkbcommon] = "--enable-xkbcommon,--disable-xkbcommon,libxkbcommon"
 PACKAGECONFIG[libudev] = "--enable-libudev,--disable-libudev,eudev"
 PACKAGECONFIG[libxml2] = "--enable-libxml2,--disable-libxml2,libxml2"
+PACKAGECONFIG[seccomp] = "--enable-seccomp,--disable-seccomp,libseccomp"
+PACKAGECONFIG[capstone] = "--enable-capstone,--disable-capstone"
+# libnfs is currently provided by meta-kodi
+PACKAGECONFIG[libnfs] = "--enable-libnfs,--disable-libnfs,libnfs"
+PACKAGECONFIG[brlapi] = "--enable-brlapi,--disable-brlapi"
+PACKAGECONFIG[vde] = "--enable-vde,--disable-vde"
+# version 4.2.0 doesn't have an "internal" option for enable-slirp, so use "git" which uses the same configure code path
+PACKAGECONFIG[slirp] = "--enable-slirp=git,--disable-slirp"
+PACKAGECONFIG[rbd] = "--enable-rbd,--disable-rbd"
+PACKAGECONFIG[rdma] = "--enable-rdma,--disable-rdma"
 
 INSANE_SKIP_${PN} = "arch"
 

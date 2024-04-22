@@ -14,11 +14,6 @@ from oeqa.core.decorator.data import skipIfNotQemu
 
 class TestExport(OESelftestTestCase):
 
-    @classmethod
-    def tearDownClass(cls):
-        runCmd("rm -rf /tmp/sdk")
-        super(TestExport, cls).tearDownClass()
-
     def test_testexport_basic(self):
         """
         Summary: Check basic testexport functionality with only ping test enabled.
@@ -95,19 +90,20 @@ class TestExport(OESelftestTestCase):
         msg = "Couldn't find SDK tarball: %s" % tarball_path
         self.assertEqual(os.path.isfile(tarball_path), True, msg)
 
-        # Extract SDK and run tar from SDK
-        result = runCmd("%s -y -d /tmp/sdk" % tarball_path)
-        self.assertEqual(0, result.status, "Couldn't extract SDK")
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            # Extract SDK and run tar from SDK
+            result = runCmd("%s -y -d %s" % (tarball_path, tmpdirname))
+            self.assertEqual(0, result.status, "Couldn't extract SDK")
 
-        env_script = result.output.split()[-1]
-        result = runCmd(". %s; which tar" % env_script, shell=True)
-        self.assertEqual(0, result.status, "Couldn't setup SDK environment")
-        is_sdk_tar = True if "/tmp/sdk" in result.output else False
-        self.assertTrue(is_sdk_tar, "Couldn't setup SDK environment")
+            env_script = result.output.split()[-1]
+            result = runCmd(". %s; which tar" % env_script, shell=True)
+            self.assertEqual(0, result.status, "Couldn't setup SDK environment")
+            is_sdk_tar = True if tmpdirname in result.output else False
+            self.assertTrue(is_sdk_tar, "Couldn't setup SDK environment")
 
-        tar_sdk = result.output
-        result = runCmd("%s --version" % tar_sdk)
-        self.assertEqual(0, result.status, "Couldn't run tar from SDK")
+            tar_sdk = result.output
+            result = runCmd("%s --version" % tar_sdk)
+            self.assertEqual(0, result.status, "Couldn't run tar from SDK")
 
 
 class TestImage(OESelftestTestCase):
@@ -179,12 +175,24 @@ class TestImage(OESelftestTestCase):
         if "DISPLAY" not in os.environ:
             self.skipTest("virgl gtk test must be run inside a X session")
         distro = oe.lsb.distro_identifier()
+        if distro and distro.startswith('almalinux'):
+            self.skipTest('virgl isn\'t working with Alma Linux')
+        if distro and distro.startswith('rocky'):
+            self.skipTest('virgl isn\'t working with Rocky Linux')
         if distro and distro == 'debian-8':
             self.skipTest('virgl isn\'t working with Debian 8')
         if distro and distro == 'centos-7':
             self.skipTest('virgl isn\'t working with Centos 7')
+        if distro and distro == 'centos-8':
+            self.skipTest('virgl isn\'t working with Centos 8')
+        if distro and distro.startswith('fedora'):
+            self.skipTest('virgl isn\'t working with Fedora')
         if distro and distro == 'opensuseleap-15.0':
             self.skipTest('virgl isn\'t working with Opensuse 15.0')
+        if distro and distro == 'ubuntu-22.04':
+            self.skipTest('virgl isn\'t working with Ubuntu 22.04')
+        if distro and distro == 'ubuntu-22.10':
+            self.skipTest('virgl isn\'t working with Ubuntu 22.10')
 
         qemu_packageconfig = get_bb_var('PACKAGECONFIG', 'qemu-system-native')
         sdl_packageconfig = get_bb_var('PACKAGECONFIG', 'libsdl2-native')
@@ -220,6 +228,7 @@ class TestImage(OESelftestTestCase):
         Author: Alexander Kanavin <alex.kanavin@gmail.com>
         """
         import subprocess, os
+        self.skipTest("Crashes in mesa observed with this test on dunfell: https://bugzilla.yoctoproject.org/show_bug.cgi?id=14527")
         try:
             content = os.listdir("/dev/dri")
             if len([i for i in content if i.startswith('render')]) == 0:
@@ -227,7 +236,7 @@ class TestImage(OESelftestTestCase):
         except FileNotFoundError:
             self.skipTest("/dev/dri directory does not exist; no render nodes available on this machine.")
         try:
-            dripath = subprocess.check_output("pkg-config --variable=dridriverdir dri", shell=True)
+            dripath = subprocess.check_output("PATH=/bin:/usr/bin:$PATH pkg-config --variable=dridriverdir dri", shell=True)
         except subprocess.CalledProcessError as e:
             self.skipTest("Could not determine the path to dri drivers on the host via pkg-config.\nPlease install Mesa development files (particularly, dri.pc) on the host machine.")
         qemu_packageconfig = get_bb_var('PACKAGECONFIG', 'qemu-system-native')

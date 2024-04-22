@@ -8,6 +8,7 @@ import shutil
 import tempfile
 import glob
 import fnmatch
+import unittest
 
 import oeqa.utils.ftools as ftools
 from oeqa.selftest.case import OESelftestTestCase
@@ -38,6 +39,13 @@ def setUpModule():
             canonical_layerpath = os.path.realpath(canonical_layerpath) + '/'
             edited_layers.append(layerpath)
             oldmetapath = os.path.realpath(layerpath)
+
+            # when downloading poky from tar.gz some tests will be skipped (BUG 12389)
+            try:
+                runCmd('git rev-parse --is-inside-work-tree', cwd=canonical_layerpath)
+            except:
+                raise unittest.SkipTest("devtool tests require folder to be a git repo")
+
             result = runCmd('git rev-parse --show-toplevel', cwd=canonical_layerpath)
             oldreporoot = result.output.rstrip()
             newmetapath = os.path.join(corecopydir, os.path.relpath(oldmetapath, oldreporoot))
@@ -340,7 +348,7 @@ class DevtoolAddTests(DevtoolBase):
         checkvars['LIC_FILES_CHKSUM'] = 'file://COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263'
         checkvars['S'] = '${WORKDIR}/git'
         checkvars['PV'] = '0.1+git${SRCPV}'
-        checkvars['SRC_URI'] = 'git://git.yoctoproject.org/git/dbus-wait;protocol=https'
+        checkvars['SRC_URI'] = 'git://git.yoctoproject.org/git/dbus-wait;protocol=https;branch=master'
         checkvars['SRCREV'] = srcrev
         checkvars['DEPENDS'] = set(['dbus'])
         self._test_recipe_contents(recipefile, checkvars, [])
@@ -442,6 +450,7 @@ class DevtoolAddTests(DevtoolBase):
         tempdir = tempfile.mkdtemp(prefix='devtoolqa')
         self.track_for_cleanup(tempdir)
         url = 'gitsm://git.yoctoproject.org/mraa'
+        url_branch = '%s;branch=master' % url
         checkrev = 'ae127b19a50aa54255e4330ccfdd9a5d058e581d'
         testrecipe = 'mraa'
         srcdir = os.path.join(tempdir, testrecipe)
@@ -462,7 +471,7 @@ class DevtoolAddTests(DevtoolBase):
         checkvars = {}
         checkvars['S'] = '${WORKDIR}/git'
         checkvars['PV'] = '1.0+git${SRCPV}'
-        checkvars['SRC_URI'] = url
+        checkvars['SRC_URI'] = url_branch
         checkvars['SRCREV'] = '${AUTOREV}'
         self._test_recipe_contents(recipefile, checkvars, [])
         # Try with revision and version specified
@@ -481,7 +490,7 @@ class DevtoolAddTests(DevtoolBase):
         checkvars = {}
         checkvars['S'] = '${WORKDIR}/git'
         checkvars['PV'] = '1.5+git${SRCPV}'
-        checkvars['SRC_URI'] = url
+        checkvars['SRC_URI'] = url_branch
         checkvars['SRCREV'] = checkrev
         self._test_recipe_contents(recipefile, checkvars, [])
 
@@ -880,7 +889,7 @@ class DevtoolUpdateTests(DevtoolBase):
         self._check_repo_status(os.path.dirname(recipefile), expected_status)
 
         result = runCmd('git diff %s' % os.path.basename(recipefile), cwd=os.path.dirname(recipefile))
-        addlines = ['SRCREV = ".*"', 'SRC_URI = "git://git.infradead.org/mtd-utils.git"']
+        addlines = ['SRCREV = ".*"', 'SRC_URI = "git://git.infradead.org/mtd-utils.git;branch=master"']
         srcurilines = src_uri.split()
         srcurilines[0] = 'SRC_URI = "' + srcurilines[0]
         srcurilines.append('"')
@@ -1322,7 +1331,7 @@ class DevtoolExtractTests(DevtoolBase):
             # Now really test deploy-target
             result = runCmd('devtool deploy-target -c %s root@%s' % (testrecipe, qemu.ip))
             # Run a test command to see if it was installed properly
-            sshargs = '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+            sshargs = '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o HostKeyAlgorithms=+ssh-rsa'
             result = runCmd('ssh %s root@%s %s' % (sshargs, qemu.ip, testcommand))
             # Check if it deployed all of the files with the right ownership/perms
             # First look on the host - need to do this under pseudo to get the correct ownership/perms

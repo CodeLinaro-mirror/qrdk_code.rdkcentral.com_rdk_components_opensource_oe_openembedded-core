@@ -70,6 +70,8 @@ class QemuRunner:
         self.monitorpipe = None
 
         self.logger = logger
+        # Whether we're expecting an exit and should show related errors
+        self.canexit = False
 
         # Enable testing other OS's
         # Set commands for target communication, and default to Linux ALWAYS
@@ -118,7 +120,10 @@ class QemuRunner:
         import fcntl
         fl = fcntl.fcntl(o, fcntl.F_GETFL)
         fcntl.fcntl(o, fcntl.F_SETFL, fl | os.O_NONBLOCK)
-        return os.read(o.fileno(), 1000000).decode("utf-8")
+        try:
+            return os.read(o.fileno(), 1000000).decode("utf-8")
+        except BlockingIOError:
+            return ""
 
 
     def handleSIGCHLD(self, signum, frame):
@@ -229,7 +234,7 @@ class QemuRunner:
             r = os.fdopen(r)
             x = r.read()
             os.killpg(os.getpgid(self.runqemu.pid), signal.SIGTERM)
-            sys.exit(0)
+            os._exit(0)
 
         self.logger.debug("runqemu started, pid is %s" % self.runqemu.pid)
         self.logger.debug("waiting at most %s seconds for qemu pid (%s)" %
@@ -427,12 +432,17 @@ class QemuRunner:
                 except OSError as e:
                     if e.errno != errno.ESRCH:
                         raise
-            endtime = time.time() + self.runqemutime
-            while self.runqemu.poll() is None and time.time() < endtime:
-                time.sleep(1)
-            if self.runqemu.poll() is None:
+            try:
+                outs, errs = self.runqemu.communicate(timeout = self.runqemutime)
+                if outs:
+                    self.logger.info("Output from runqemu:\n%s", outs.decode("utf-8"))
+                if errs:
+                    self.logger.info("Stderr from runqemu:\n%s", errs.decode("utf-8"))
+            except TimeoutExpired:
                 self.logger.debug("Sending SIGKILL to runqemu")
                 os.killpg(os.getpgid(self.runqemu.pid), signal.SIGKILL)
+            if not self.runqemu.stdout.closed:
+                self.logger.info("Output from runqemu:\n%s" % self.getOutput(self.runqemu.stdout))
             self.runqemu.stdin.close()
             self.runqemu.stdout.close()
             self.runqemu_exited = True
@@ -466,6 +476,11 @@ class QemuRunner:
         if self.thread and self.thread.is_alive():
             self.thread.stop()
             self.thread.join()
+
+    def allowexit(self):
+        self.canexit = True
+        if self.thread:
+            self.thread.allowexit()
 
     def restart(self, qemuparams = None):
         self.logger.warning("Restarting qemu process")
@@ -522,7 +537,9 @@ class QemuRunner:
                     if re.search(self.boot_patterns['search_cmd_finished'], data):
                         break
                 else:
-                    raise Exception("No data on serial console socket")
+                    if self.canexit:
+                        return (1, "")
+                    raise Exception("No data on serial console socket, connection closed?")
 
         if data:
             if raw:
@@ -560,6 +577,7 @@ class LoggingThread(threading.Thread):
         self.logger = logger
         self.readsock = None
         self.running = False
+        self.canexit = False
 
         self.errorevents = select.POLLERR | select.POLLHUP | select.POLLNVAL
         self.readevents = select.POLLIN | select.POLLPRI
@@ -592,6 +610,9 @@ class LoggingThread(threading.Thread):
         self.close_ignore_error(self.readpipe)
         self.close_ignore_error(self.writepipe)
         self.running = False
+
+    def allowexit(self):
+        self.canexit = True
 
     def eventloop(self):
         poll = select.poll()
@@ -638,7 +659,7 @@ class LoggingThread(threading.Thread):
             data = self.readsock.recv(count)
         except socket.error as e:
             if e.errno == errno.EAGAIN or e.errno == errno.EWOULDBLOCK:
-                return ''
+                return b''
             else:
                 raise
 
@@ -649,7 +670,9 @@ class LoggingThread(threading.Thread):
             # happened. But for this code it counts as an
             # error since the connection shouldn't go away
             # until qemu exits.
-            raise Exception("Console connection closed unexpectedly")
+            if not self.canexit:
+                raise Exception("Console connection closed unexpectedly")
+            return b''
 
         return data
 

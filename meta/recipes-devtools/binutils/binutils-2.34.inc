@@ -24,7 +24,7 @@ BRANCH ?= "binutils-2_34-branch"
 
 UPSTREAM_CHECK_GITTAGREGEX = "binutils-(?P<pver>\d+_(\d_?)*)"
 
-SRCREV ?= "d4b50999b3b287b5f984ade2f8734aa8c9359440"
+SRCREV ?= "c4e78c0868a22971680217a41fdb73516a26813d"
 BINUTILS_GIT_URI ?= "git://sourceware.org/git/binutils-gdb.git;branch=${BRANCH};protocol=git"
 SRC_URI = "\
      ${BINUTILS_GIT_URI} \
@@ -42,9 +42,25 @@ SRC_URI = "\
      file://0015-sync-with-OE-libtool-changes.patch \
      file://0016-Check-for-clang-before-checking-gcc-version.patch \
      file://0017-binutils-drop-redundant-program_name-definition-fno-.patch \
+     file://0018-Include-members-in-the-variable-table-used-when-reso.patch \
      file://CVE-2020-0551.patch \
      file://0001-gas-improve-reproducibility-for-stabs-debugging-data.patch \
      file://CVE-2020-16592.patch \
      file://CVE-2020-16598.patch \
+     file://CVE-2021-20197.patch \
+     file://CVE-2021-3487.patch \
+     file://CVE-2021-3549.patch \
+     file://CVE-2020-16593.patch \
+     file://0001-CVE-2021-45078.patch \
+     file://CVE-2022-38533.patch \
+     file://CVE-2023-25588.patch \
+     file://CVE-2021-46174.patch \
+     file://CVE-2023-25584.patch \
+     file://CVE-2022-47007.patch \
+     file://CVE-2022-47008.patch \
+     file://CVE-2022-47010.patch \
+     file://CVE-2022-47011.patch \
+     file://CVE-2022-48063.patch \
+     file://CVE-2022-47695.patch \
 "
 S  = "${WORKDIR}/git"

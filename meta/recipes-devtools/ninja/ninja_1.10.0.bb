@@ -8,7 +8,7 @@ DEPENDS = "re2c-native ninja-native"
 
 SRCREV = "ed7f67040b370189d989adbd60ff8ea29957231f"
 
-SRC_URI = "git://github.com/ninja-build/ninja.git;branch=release"
+SRC_URI = "git://github.com/ninja-build/ninja.git;branch=release;protocol=https"
 UPSTREAM_CHECK_GITTAGREGEX = "v(?P<pver>.*)"
 
 S = "${WORKDIR}/git"
@@ -29,3 +29,6 @@ do_install() {
 }
 
 BBCLASSEXTEND = "native nativesdk"
+
+# This is a different Ninja
+CVE_CHECK_WHITELIST += "CVE-2021-4336"

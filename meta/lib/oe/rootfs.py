@@ -167,7 +167,7 @@ class Rootfs(object, metaclass=ABCMeta):
             pass
         os.rename(self.image_rootfs, self.image_rootfs + '-dbg')
 
-        bb.note("  Restoreing original rootfs...")
+        bb.note("  Restoring original rootfs...")
         os.rename(self.image_rootfs + '-orig', self.image_rootfs)
 
     def _exec_shell_cmd(self, cmd):
@@ -304,7 +304,7 @@ class Rootfs(object, metaclass=ABCMeta):
     def _check_for_kernel_modules(self, modules_dir):
         for root, dirs, files in os.walk(modules_dir, topdown=True):
             for name in files:
-                found_ko = name.endswith(".ko")
+                found_ko = name.endswith((".ko", ".ko.gz", ".ko.xz"))
                 if found_ko:
                     return found_ko
         return False
@@ -321,7 +321,9 @@ class Rootfs(object, metaclass=ABCMeta):
         if not os.path.exists(kernel_abi_ver_file):
             bb.fatal("No kernel-abiversion file found (%s), cannot run depmod, aborting" % kernel_abi_ver_file)
 
-        kernel_ver = open(kernel_abi_ver_file).read().strip(' \n')
+        with open(kernel_abi_ver_file) as f:
+            kernel_ver = f.read().strip(' \n')
+
         versioned_modules_dir = os.path.join(self.image_rootfs, modules_dir, kernel_ver)
 
         bb.utils.mkdirhier(versioned_modules_dir)

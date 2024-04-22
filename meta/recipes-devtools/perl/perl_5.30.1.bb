@@ -29,6 +29,8 @@ SRC_URI = "https://www.cpan.org/src/5.0/perl-${PV}.tar.gz;name=perl \
            file://CVE-2020-10878_1.patch \
            file://CVE-2020-10878_2.patch \
            file://CVE-2020-12723.patch \
+           file://CVE-2023-31484.patch \
+           file://CVE-2023-47038.patch \
            "
 SRC_URI_append_class-native = " \
            file://perl-configpm-switch.patch \
@@ -43,6 +45,10 @@ SRC_URI[perl-cross.md5sum] = "1e463b105cfa56d251a86979af23e3a7"
 SRC_URI[perl-cross.sha256sum] = "edce0b0c2f725e2db3f203d6d8e9f3f7161256f5d1590551e40694f21200141d"
 
 S = "${WORKDIR}/perl-${PV}"
+
+# This is windows only issue.
+# https://ubuntu.com/security/CVE-2023-47039
+CVE_CHECK_WHITELIST += "CVE-2023-47039"
 
 inherit upstream-version-is-even update-alternatives
 

@@ -99,30 +99,9 @@ TESTIMAGE_DUMP_DIR ?= "${LOG_DIR}/runtime-hostdump/"
 TESTIMAGE_UPDATE_VARS ?= "DL_DIR WORKDIR DEPLOY_DIR"
 
 testimage_dump_target () {
-    top -bn1
-    ps
-    free
-    df
-    # The next command will export the default gateway IP
-    export DEFAULT_GATEWAY=$(ip route | awk '/default/ { print $3}')
-    ping -c3 $DEFAULT_GATEWAY
-    dmesg
-    netstat -an
-    ip address
-    # Next command will dump logs from /var/log/
-    find /var/log/ -type f 2>/dev/null -exec echo "====================" \; -exec echo {} \; -exec echo "====================" \; -exec cat {} \; -exec echo "" \;
 }
 
 testimage_dump_host () {
-    top -bn1
-    iostat -x -z -N -d -p ALL 20 2
-    ps -ef
-    free
-    df
-    memstat
-    dmesg
-    ip -s link
-    netstat -an
 }
 
 python do_testimage() {
@@ -193,6 +172,7 @@ def testimage_main(d):
     import json
     import signal
     import logging
+    import shutil
 
     from bb.utils import export_proxies
     from oeqa.core.utils.misc import updateTestData
@@ -228,9 +208,10 @@ def testimage_main(d):
 
     tdname = "%s.testdata.json" % image_name
     try:
-        td = json.load(open(tdname, "r"))
-    except (FileNotFoundError) as err:
-         bb.fatal('File %s Not Found. Have you built the image with INHERIT+="testimage" in the conf/local.conf?' % tdname)
+        with open(tdname, "r") as f:
+            td = json.load(f)
+    except FileNotFoundError as err:
+        bb.fatal('File %s not found (%s).\nHave you built the image with INHERIT += "testimage" in the conf/local.conf?' % (tdname, err))
 
     # Some variables need to be updates (mostly paths) with the
     # ones of the current environment because some tests require them.
@@ -397,10 +378,17 @@ def testimage_main(d):
                         get_testimage_result_id(configuration),
                         dump_streams=d.getVar('TESTREPORT_FULLLOGS'))
         results.logSummary(pn)
+
+    # Copy additional logs to tmp/log/oeqa so it's easier to find them
+    targetdir = os.path.join(get_testimage_json_result_dir(d), d.getVar("PN"))
+    os.makedirs(targetdir, exist_ok=True)
+    os.symlink(bootlog, os.path.join(targetdir, os.path.basename(bootlog)))
+    os.symlink(d.getVar("BB_LOGFILE"), os.path.join(targetdir, os.path.basename(d.getVar("BB_LOGFILE") + "." + d.getVar('DATETIME'))))
+
     if not results or not complete:
-        bb.fatal('%s - FAILED - tests were interrupted during execution' % pn, forcelog=True)
+        bb.fatal('%s - FAILED - tests were interrupted during execution, check the logs in %s' % (pn, d.getVar("LOG_DIR")), forcelog=True)
     if not results.wasSuccessful():
-        bb.fatal('%s - FAILED - check the task log and the ssh log' % pn, forcelog=True)
+        bb.fatal('%s - FAILED - also check the logs in %s' % (pn, d.getVar("LOG_DIR")), forcelog=True)
 
 def get_runtime_paths(d):
     """

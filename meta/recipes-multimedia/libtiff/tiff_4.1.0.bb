@@ -9,12 +9,56 @@ LIC_FILES_CHKSUM = "file://COPYRIGHT;md5=34da3db46fab7501992f9615d7e158cf"
 CVE_PRODUCT = "libtiff"
 
 SRC_URI = "http://download.osgeo.org/libtiff/tiff-${PV}.tar.gz \
+           file://CVE-2020-35523.patch  \
+           file://CVE-2020-35524-1.patch \
+           file://CVE-2020-35524-2.patch \
+           file://001_support_patch_for_CVE-2020-35521_and_CVE-2020-35522.patch \
+           file://002_support_patch_for_CVE-2020-35521_and_CVE-2020-35522.patch \
+           file://CVE-2020-35521_and_CVE-2020-35522.patch \
+           file://0001-tiffset-fix-global-buffer-overflow-for-ASCII-tags-wh.patch \
+           file://561599c99f987dc32ae110370cfdd7df7975586b.patch \
+           file://eecb0712f4c3a5b449f70c57988260a667ddbdef.patch \
+           file://CVE-2022-0865.patch \
+           file://CVE-2022-0908.patch \
+           file://CVE-2022-0907.patch \
+           file://CVE-2022-0909.patch \
+           file://CVE-2022-0891.patch \
+           file://CVE-2022-0924.patch \
+           file://CVE-2022-2056-CVE-2022-2057-CVE-2022-2058.patch \
+           file://CVE-2022-34526.patch \
+           file://CVE-2022-2867-CVE-2022-2868-CVE-2022-2869.patch \
+           file://CVE-2022-1354.patch \
+           file://CVE-2022-1355.patch \
+           file://CVE-2022-3570_3598.patch \
+           file://CVE-2022-3597_3626_3627.patch \
+           file://CVE-2022-3599.patch \
+           file://CVE-2022-3970.patch \
+           file://CVE-2022-48281.patch \
+           file://CVE-2023-0795_0796_0797_0798_0799.patch \
+           file://CVE-2023-0800_0801_0802_0803_0804.patch \
+           file://CVE-2023-1916.patch \
+           file://CVE-2023-25433.patch \
+           file://CVE-2023-25434-CVE-2023-25435.patch \
+           file://CVE-2023-26965.patch \
+           file://CVE-2023-26966.patch \
+           file://CVE-2023-2908.patch \
+           file://CVE-2023-3316.patch \
+           file://CVE-2023-3576.patch \
+           file://CVE-2023-3618.patch \
+           file://CVE-2023-40745.patch \
+           file://CVE-2023-41175.patch \
+           file://CVE-2022-40090.patch \
+           file://CVE-2023-6228.patch \
           "
 SRC_URI[md5sum] = "2165e7aba557463acc0664e71a3ed424"
 SRC_URI[sha256sum] = "5d29f32517dadb6dbcd1255ea5bbc93a2b54b94fbf83653b4d65c7d6775b8634"
 
 # exclude betas
 UPSTREAM_CHECK_REGEX = "tiff-(?P<pver>\d+(\.\d+)+).tar"
+
+# Tested with check from https://security-tracker.debian.org/tracker/CVE-2015-7313
+# and 4.1.0 doesn't have the issue
+CVE_CHECK_WHITELIST += "CVE-2015-7313"
 
 inherit autotools multilib_header
 

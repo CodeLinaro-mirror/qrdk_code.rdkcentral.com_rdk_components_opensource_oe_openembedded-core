@@ -54,9 +54,10 @@ ARCHIVER_MODE[mirror] ?= "split"
 
 DEPLOY_DIR_SRC ?= "${DEPLOY_DIR}/sources"
 ARCHIVER_TOPDIR ?= "${WORKDIR}/archiver-sources"
-ARCHIVER_OUTDIR = "${ARCHIVER_TOPDIR}/${TARGET_SYS}/${PF}/"
+ARCHIVER_ARCH = "${TARGET_SYS}"
+ARCHIVER_OUTDIR = "${ARCHIVER_TOPDIR}/${ARCHIVER_ARCH}/${PF}/"
 ARCHIVER_RPMTOPDIR ?= "${WORKDIR}/deploy-sources-rpm"
-ARCHIVER_RPMOUTDIR = "${ARCHIVER_RPMTOPDIR}/${TARGET_SYS}/${PF}/"
+ARCHIVER_RPMOUTDIR = "${ARCHIVER_RPMTOPDIR}/${ARCHIVER_ARCH}/${PF}/"
 ARCHIVER_WORKDIR = "${WORKDIR}/archiver-work/"
 
 # When producing a combined mirror directory, allow duplicates for the case
@@ -99,6 +100,10 @@ python () {
             and not pn.startswith('gcc-source'):
         bb.debug(1, 'archiver: %s is excluded, covered by gcc-source' % pn)
         return
+
+    # TARGET_SYS in ARCHIVER_ARCH will break the stamp for gcc-source in multiconfig
+    if pn.startswith('gcc-source'):
+        d.setVar('ARCHIVER_ARCH', "allarch")
 
     def hasTask(task):
         return bool(d.getVarFlag(task, "task", False)) and not bool(d.getVarFlag(task, "noexec", False))
@@ -281,7 +286,10 @@ python do_ar_configured() {
         # ${STAGING_DATADIR}/aclocal/libtool.m4, so we can't re-run the
         # do_configure, we archive the already configured ${S} to
         # instead of.
-        elif pn != 'libtool-native':
+        # The kernel class functions require it to be on work-shared, we
+        # don't unpack, patch, configure again, just archive the already
+        # configured ${S}
+        elif not (pn == 'libtool-native' or is_work_shared(d)):
             def runTask(task):
                 prefuncs = d.getVarFlag(task, 'prefuncs') or ''
                 for func in prefuncs.split():
@@ -484,6 +492,9 @@ python do_unpack_and_patch() {
         src_orig = '%s.orig' % src
         oe.path.copytree(src, src_orig)
 
+    if bb.data.inherits_class('dos2unix', d):
+        bb.build.exec_func('do_convert_crlf_to_lf', d)
+
     # Make sure gcc and kernel sources are patched only once
     if not (d.getVar('SRC_URI') == "" or is_work_shared(d)):
         bb.build.exec_func('do_patch', d)
@@ -572,7 +583,7 @@ python do_dumpdata () {
 
 SSTATETASKS += "do_deploy_archives"
 do_deploy_archives () {
-    echo "Deploying source archive files from ${ARCHIVER_TOPDIR} to ${DEPLOY_DIR_SRC}."
+    bbnote "Deploying source archive files from ${ARCHIVER_TOPDIR} to ${DEPLOY_DIR_SRC}."
 }
 python do_deploy_archives_setscene () {
     sstate_setscene(d)

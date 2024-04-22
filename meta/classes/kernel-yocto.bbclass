@@ -105,6 +105,8 @@ do_kernel_metadata() {
 	cd ${S}
 	export KMETA=${KMETA}
 
+	bbnote "do_kernel_metadata: for summary/debug, set KCONF_AUDIT_LEVEL > 0"
+
 	# if kernel tools are available in-tree, they are preferred
 	# and are placed on the path before any external tools. Unless
 	# the external tools flag is set, in that case we do nothing.
@@ -192,7 +194,7 @@ do_kernel_metadata() {
 	# SRC_URI. If they were supplied, we convert them into include directives
 	# for the update part of the process
 	for f in ${feat_dirs}; do
-		if [ -d "${WORKDIR}/$f/meta" ]; then
+		if [ -d "${WORKDIR}/$f/kernel-meta" ]; then
 			includes="$includes -I${WORKDIR}/$f/kernel-meta"
 		elif [ -d "${WORKDIR}/../oe-local-files/$f" ]; then
 			includes="$includes -I${WORKDIR}/../oe-local-files/$f"
@@ -252,6 +254,23 @@ do_kernel_metadata() {
 			bbfatal_log "Could not generate configuration queue for ${KMACHINE}."
 		fi
 	fi
+
+	if [ ${KCONF_AUDIT_LEVEL} -gt 0 ]; then
+		bbnote "kernel meta data summary for ${KMACHINE} (${LINUX_KERNEL_TYPE}):"
+		bbnote "======================================================================"
+		if [ -n "${KMETA_EXTERNAL_BSPS}" ]; then
+			bbnote "Non kernel-cache (external) bsp"
+		fi
+		bbnote "BSP entry point / definition: $bsp_definition"
+		if [ -n "$in_tree_defconfig" ]; then
+			bbnote "KBUILD_DEFCONFIG: ${KBUILD_DEFCONFIG}"
+		fi
+		bbnote "Fragments from SRC_URI: $sccs_from_src_uri"
+		bbnote "KERNEL_FEATURES: $KERNEL_FEATURES_FINAL"
+		bbnote "Final scc/cfg list: $sccs_defconfig $bsp_definition $sccs $KERNEL_FEATURES_FINAL"
+	fi
+
+	set -e
 }
 
 do_patch() {
@@ -281,6 +300,8 @@ do_patch() {
 			fi
 		done
 	fi
+
+	set -e
 }
 
 do_kernel_checkout() {
@@ -303,6 +324,21 @@ do_kernel_checkout() {
 			fi
 		fi
 		cd ${S}
+
+		# convert any remote branches to local tracking ones
+		for i in `git branch -a --no-color | grep remotes | grep -v HEAD`; do
+			b=`echo $i | cut -d' ' -f2 | sed 's%remotes/origin/%%'`;
+			git show-ref --quiet --verify -- "refs/heads/$b"
+			if [ $? -ne 0 ]; then
+				git branch $b $i > /dev/null
+			fi
+		done
+
+		# Create a working tree copy of the kernel by checking out a branch
+		machine_branch="${@ get_machine_branch(d, "${KBRANCH}" )}"
+
+		# checkout and clobber any unimportant files
+		git checkout -f ${machine_branch}
 	else
 		# case: we have no git repository at all. 
 		# To support low bandwidth options for building the kernel, we'll just 
@@ -325,20 +361,7 @@ do_kernel_checkout() {
 		git clean -d -f
 	fi
 
-	# convert any remote branches to local tracking ones
-	for i in `git branch -a --no-color | grep remotes | grep -v HEAD`; do
-		b=`echo $i | cut -d' ' -f2 | sed 's%remotes/origin/%%'`;
-		git show-ref --quiet --verify -- "refs/heads/$b"
-		if [ $? -ne 0 ]; then
-			git branch $b $i > /dev/null
-		fi
-	done
-
-	# Create a working tree copy of the kernel by checking out a branch
-	machine_branch="${@ get_machine_branch(d, "${KBRANCH}" )}"
-
-	# checkout and clobber any unimportant files
-	git checkout -f ${machine_branch}
+	set -e
 }
 do_kernel_checkout[dirs] = "${S}"
 
@@ -506,6 +529,8 @@ do_validate_branches() {
 			kgit-s2q --clean
 		fi
 	fi
+
+	set -e
 }
 
 OE_TERMINAL_EXPORTS += "KBUILD_OUTPUT"

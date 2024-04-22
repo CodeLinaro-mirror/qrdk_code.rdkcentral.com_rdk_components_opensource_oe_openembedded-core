@@ -45,6 +45,7 @@ PACKAGE_NO_GCONV ?= "0"
 OVERRIDES_append = ":${TARGET_ARCH}-${TARGET_OS}"
 
 locale_base_postinst_ontarget() {
+mkdir ${libdir}/locale
 localedef --inputfile=${datadir}/i18n/locales/%s --charmap=%s %s
 }
 
@@ -355,7 +356,7 @@ python package_do_split_gconvs () {
                 m.write("\t@echo 'Progress %d/%d'\n" % (i, total))
                 m.write("\t" + makerecipe + "\n\n")
         d.setVar("EXTRA_OEMAKE", "-C %s ${PARALLEL_MAKE}" % (os.path.dirname(makefile)))
-        d.setVarFlag("oe_runmake", "progress", "outof:Progress\s(\d+)/(\d+)")
+        d.setVarFlag("oe_runmake", "progress", r"outof:Progress\s(\d+)/(\d+)")
         bb.note("Executing binary locale generation makefile")
         bb.build.exec_func("oe_runmake", d)
         bb.note("collecting binary locales from locale tree")

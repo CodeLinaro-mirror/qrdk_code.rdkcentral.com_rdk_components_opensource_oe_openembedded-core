@@ -34,6 +34,7 @@ class OESSHTarget(OETarget):
         self.timeout = timeout
         self.user = user
         ssh_options = [
+                '-o', 'HostKeyAlgorithms=+ssh-rsa',
                 '-o', 'UserKnownHostsFile=/dev/null',
                 '-o', 'StrictHostKeyChecking=no',
                 '-o', 'LogLevel=ERROR'
@@ -224,6 +225,9 @@ def SSHCall(command, logger, timeout=None, **opts):
                             logger.debug('Partial data from SSH call: %s' % data)
                             endtime = time.time() + timeout
                 except InterruptedError:
+                    continue
+                except BlockingIOError:
+                    logger.debug('BlockingIOError')
                     continue
 
             # process hasn't returned yet

@@ -122,6 +122,10 @@ def setup_hosttools_dir(dest, toolsvar, d, fatal=True):
     tools = d.getVar(toolsvar).split()
     origbbenv = d.getVar("BB_ORIGENV", False)
     path = origbbenv.getVar("PATH")
+    # Need to ignore our own scripts directories to avoid circular links
+    for p in path.split(":"):
+        if p.endswith("/scripts"):
+            path = path.replace(p, "/ignoreme")
     bb.utils.mkdirhier(dest)
     notfound = []
     for tool in tools:
@@ -135,7 +139,7 @@ def setup_hosttools_dir(dest, toolsvar, d, fatal=True):
             # /usr/local/bin/ccache/gcc -> /usr/bin/ccache, then which(gcc)
             # would return /usr/local/bin/ccache/gcc, but what we need is
             # /usr/bin/gcc, this code can check and fix that.
-            if "ccache" in srctool:
+            if os.path.islink(srctool) and os.path.basename(os.readlink(srctool)) == 'ccache':
                 srctool = bb.utils.which(path, tool, executable=True, direction=1)
             if srctool:
                 os.symlink(srctool, desttool)
@@ -153,14 +157,14 @@ do_fetch[vardeps] += "SRCREV"
 python base_do_fetch() {
 
     src_uri = (d.getVar('SRC_URI') or "").split()
-    if len(src_uri) == 0:
+    if not src_uri:
         return
 
     try:
         fetcher = bb.fetch2.Fetch(src_uri, d)
         fetcher.download()
     except bb.fetch2.BBFetchException as e:
-        bb.fatal(str(e))
+        bb.fatal("Bitbake Fetcher Error: " + repr(e))
 }
 
 addtask unpack after do_fetch
@@ -170,14 +174,14 @@ do_unpack[cleandirs] = "${@d.getVar('S') if os.path.normpath(d.getVar('S')) != o
 
 python base_do_unpack() {
     src_uri = (d.getVar('SRC_URI') or "").split()
-    if len(src_uri) == 0:
+    if not src_uri:
         return
 
     try:
         fetcher = bb.fetch2.Fetch(src_uri, d)
         fetcher.unpack(d.getVar('WORKDIR'))
     except bb.fetch2.BBFetchException as e:
-        bb.fatal(str(e))
+        bb.fatal("Bitbake Fetcher Error: " + repr(e))
 }
 
 def get_layers_branch_rev(d):
@@ -688,7 +692,7 @@ python () {
             if os.path.basename(p) == machine and os.path.isdir(p):
                 paths.append(p)
 
-        if len(paths) != 0:
+        if paths:
             for s in srcuri.split():
                 if not s.startswith("file://"):
                     continue
@@ -721,7 +725,7 @@ do_cleansstate[nostamp] = "1"
 
 python do_cleanall() {
     src_uri = (d.getVar('SRC_URI') or "").split()
-    if len(src_uri) == 0:
+    if not src_uri:
         return
 
     try:

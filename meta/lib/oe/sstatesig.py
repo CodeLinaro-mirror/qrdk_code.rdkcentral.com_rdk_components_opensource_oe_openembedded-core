@@ -461,7 +461,7 @@ def find_sstate_manifest(taskdata, taskdata2, taskname, d, multilibcache):
         manifest = d2.expand("${SSTATE_MANIFESTS}/manifest-%s-%s.%s" % (pkgarch, taskdata, taskname))
         if os.path.exists(manifest):
             return manifest, d2
-    bb.error("Manifest %s not found in %s (variant '%s')?" % (manifest, d2.expand(" ".join(pkgarchs)), variant))
+    bb.warn("Manifest %s not found in %s (variant '%s')?" % (manifest, d2.expand(" ".join(pkgarchs)), variant))
     return None, d2
 
 def OEOuthashBasic(path, sigfile, task, d):
@@ -488,8 +488,10 @@ def OEOuthashBasic(path, sigfile, task, d):
     if "package_write_" in task or task == "package_qa":
         include_owners = False
     include_timestamps = False
+    include_root = True
     if task == "package":
         include_timestamps = d.getVar('BUILD_REPRODUCIBLE_BINARIES') == '1'
+        include_root = False
     extra_content = d.getVar('HASHEQUIV_HASH_VERSION')
 
     try:
@@ -600,7 +602,8 @@ def OEOuthashBasic(path, sigfile, task, d):
                 update_hash("\n")
 
             # Process this directory and all its child files
-            process(root)
+            if include_root or root != ".":
+                process(root)
             for f in files:
                 if f == 'fixmepath':
                     continue

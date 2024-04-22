@@ -1,6 +1,6 @@
 SUMMARY = "XML C Parser Library and Toolkit"
 DESCRIPTION = "The XML Parser Library allows for manipulation of XML files.  Libxml2 exports Push and Pull type parser interfaces for both XML and HTML.  It can do DTD validation at parse time, on a parsed document instance or with an arbitrary DTD.  Libxml2 includes complete XPath, XPointer and Xinclude implementations.  It also has a SAX like interface, which is designed to be compatible with Expat."
-HOMEPAGE = "http://www.xmlsoft.org/"
+HOMEPAGE = "https://gitlab.gnome.org/GNOME/libxml2"
 BUGTRACKER = "http://bugzilla.gnome.org/buglist.cgi?product=libxml2"
 SECTION = "libs"
 LICENSE = "MIT"
@@ -11,8 +11,9 @@ LIC_FILES_CHKSUM = "file://Copyright;md5=2044417e2e5006b65a8b9067b683fcf1 \
 
 DEPENDS = "zlib virtual/libiconv"
 
-SRC_URI = "http://www.xmlsoft.org/sources/libxml2-${PV}.tar.gz;name=libtar \
-           http://www.w3.org/XML/Test/xmlts20080827.tar.gz;subdir=${BP};name=testtar \
+inherit gnomebase
+
+SRC_URI += "http://www.w3.org/XML/Test/xmlts20080827.tar.gz;subdir=${BP};name=testtar \
            file://libxml-64bit.patch \
            file://runtest.patch \
            file://run-ptest \
@@ -23,10 +24,29 @@ SRC_URI = "http://www.xmlsoft.org/sources/libxml2-${PV}.tar.gz;name=libtar \
            file://CVE-2020-7595.patch \
            file://CVE-2019-20388.patch \
            file://CVE-2020-24977.patch \
+           file://CVE-2021-3517.patch \
+           file://CVE-2021-3537.patch \
+           file://CVE-2021-3518.patch \
+           file://CVE-2021-3541.patch \
+           file://CVE-2022-23308.patch \
+           file://CVE-2022-23308-fix-regression.patch \
+           file://CVE-2022-29824-dependent.patch \
+           file://CVE-2022-29824.patch \
+           file://0001-Port-gentest.py-to-Python-3.patch \
+           file://CVE-2016-3709.patch \
+           file://CVE-2022-40303.patch \
+           file://CVE-2022-40304.patch \
+           file://CVE-2023-28484.patch \
+           file://CVE-2023-29469.patch \
+           file://CVE-2023-39615-pre.patch \
+           file://CVE-2023-39615-0001.patch \
+           file://CVE-2023-39615-0002.patch \
+           file://CVE-2021-3516.patch \
+           file://CVE-2023-45322-1.patch \
+           file://CVE-2023-45322-2.patch \
            "
 
-SRC_URI[libtar.md5sum] = "10942a1dc23137a8aa07f0639cbfece5"
-SRC_URI[libtar.sha256sum] = "aafee193ffb8fe0c82d4afef6ef91972cbaf5feea100edc2f262750611b4be1f"
+SRC_URI[archive.sha256sum] = "593b7b751dd18c2d6abcd0c4bcb29efc203d0b4373a6df98e3a455ea74ae2813"
 SRC_URI[testtar.md5sum] = "ae3d1ebe000a3972afa104ca7f0e1b4a"
 SRC_URI[testtar.sha256sum] = "96151685cec997e1f9f3387e3626d61e6284d4d6e66e0e440c209286c03e9cc7"
 
@@ -42,7 +62,7 @@ inherit autotools pkgconfig binconfig-disabled ptest features_check
 
 inherit ${@bb.utils.contains('PACKAGECONFIG', 'python', 'python3targetconfig', '', d)}
 
-RDEPENDS_${PN}-ptest += "make ${@bb.utils.contains('PACKAGECONFIG', 'python', 'libgcc python3-core python3-logging python3-shell  python3-stringold python3-threading python3-unittest ${PN}-python', '', d)}"
+RDEPENDS_${PN}-ptest += "bash make ${@bb.utils.contains('PACKAGECONFIG', 'python', 'libgcc python3-core python3-logging python3-shell  python3-stringold python3-threading python3-unittest ${PN}-python', '', d)}"
 
 RDEPENDS_${PN}-python += "${@bb.utils.contains('PACKAGECONFIG', 'python', 'python3-core', '', d)}"
 
@@ -81,6 +101,16 @@ do_configure_prepend () {
 }
 
 do_compile_ptest() {
+        # Make sure that testapi.c is newer than gentests.py, because
+        # with reproducible builds, they will both get e.g. Jan  1  1970
+        # modification time from SOURCE_DATE_EPOCH and then check-am
+        # might try to rebuild_testapi, which will fail even with
+        # 0001-Port-gentest.py-to-Python-3.patch, because it needs
+        # libxml2 module (libxml2-native dependency and correctly
+        # set PYTHON_SITE_PACKAGES), it's easier to
+        # just rely on pre-generated testapi.c from the release
+        touch ${S}/testapi.c
+
 	oe_runmake check-am
 }
 

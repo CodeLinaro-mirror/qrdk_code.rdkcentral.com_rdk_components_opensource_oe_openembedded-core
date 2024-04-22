@@ -14,10 +14,13 @@ RRECOMMENDS_${PN} = "lighttpd-module-access \
                      lighttpd-module-accesslog"
 
 SRC_URI = "http://download.lighttpd.net/lighttpd/releases-1.4.x/lighttpd-${PV}.tar.xz \
+        file://0001-mod_extforward-fix-out-of-bounds-OOB-write-fixes-313.patch \
         file://index.html.lighttpd \
         file://lighttpd.conf \
         file://lighttpd \
         file://0001-Use-pkg-config-for-pcre-dependency-instead-of-config.patch \
+        file://default-chunk-size-8k.patch \
+        file://0001-core-reuse-large-mem-chunks-fix-mem-usage-fixes-3033.patch \
         "
 
 SRC_URI[md5sum] = "be4bda2c28bcbdac6eb941528f6edf03"
