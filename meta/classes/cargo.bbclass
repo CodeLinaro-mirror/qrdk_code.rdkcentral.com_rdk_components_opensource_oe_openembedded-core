@@ -13,7 +13,7 @@ BASEDEPENDS:append = " cargo-native"
 
 # Ensure we get the right rust variant
 DEPENDS:append:class-target = " virtual/${TARGET_PREFIX}rust ${RUSTLIB_DEP}"
-DEPENDS:append:class-nativesdk = " virtual/${TARGET_PREFIX}rust ${RUSTLIB_DEP}"
+DEPENDS:append:class-nativesdk = "virtual/${TARGET_PREFIX}rust ${RUSTLIB_DEP}"
 DEPENDS:append:class-native = " rust-native"
 
 # Enable build separation
@@ -30,9 +30,29 @@ CARGO_SRC_DIR ??= ""
 # The actual path to the Cargo.toml
 MANIFEST_PATH ??= "${S}/${CARGO_SRC_DIR}/Cargo.toml"
 
+# Features and additional flags for 'cargo build'.
+#
+# CARGO_FEATURES supports both, a comma or space separated list. Disabling
+# default features or enabling all features could be done either by setting
+# CARGO_NO_DEFAULT_FEATURES or CARGO_ALL_FEATURES to "1" or passing
+# '--no-default-features' or '--all-features' via EXTRA_CARGO_FLAGS.
+CARGO_FEATURES ??= ""
+CARGO_NO_DEFAULT_FEATURES ??= ""
+CARGO_ALL_FEATURES ??= ""
+EXTRA_CARGO_FLAGS ??= ""
+
 RUSTFLAGS ??= ""
 BUILD_MODE = "${@['--release', ''][d.getVar('DEBUG_BUILD') == '1']}"
-CARGO_BUILD_FLAGS = "-v --target ${HOST_SYS} ${BUILD_MODE} --manifest-path=${MANIFEST_PATH}"
+CARGO_BUILD_FLAGS = "\
+    -v \
+    --target ${HOST_SYS} \
+    ${BUILD_MODE} \
+    --manifest-path=${MANIFEST_PATH} \
+    ${@oe.utils.conditional('CARGO_NO_DEFAULT_FEATURES', '1', '--no-default-features', '', d)} \
+    ${@oe.utils.conditional('CARGO_ALL_FEATURES', '1', '--all-features', '', d)} \
+    ${@oe.utils.conditional('CARGO_FEATURES', '', '', '--features "${CARGO_FEATURES}"', d)} \
+    ${EXTRA_CARGO_FLAGS} \
+"
 
 # This is based on the content of CARGO_BUILD_FLAGS and generally will need to
 # change if CARGO_BUILD_FLAGS changes.
@@ -85,6 +105,11 @@ cargo_do_install () {
 	if ! $have_installed; then
 		die "Did not find anything to install"
 	fi
+}
+
+python do_devshell:prepend () {
+    os.environ['RUSTFLAGS'] = d.getVar('RUSTFLAGS')
+    os.environ['CARGO_BUILD_TARGET'] = d.getVar('HOST_SYS')
 }
 
 EXPORT_FUNCTIONS do_compile do_install

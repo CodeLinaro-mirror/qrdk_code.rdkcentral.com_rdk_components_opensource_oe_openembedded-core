@@ -1,5 +1,3 @@
-inherit python3native
-
 # Common variables used by all Rust builds
 export rustlibdir = "${libdir}/rust"
 FILES:${PN} += "${rustlibdir}/*.so"
@@ -51,7 +49,6 @@ def target_is_armv7(d):
         return False
     else:
         return True
-target_is_armv7[vardepvalue] = "${@target_is_armv7(d)}"
 
 # Responsible for taking Yocto triples and converting it to Rust triples
 def rust_base_triple(d, thing):
@@ -66,7 +63,7 @@ def rust_base_triple(d, thing):
     if thing == "TARGET" and target_is_armv7(d):
         arch = "armv7"
     else:
-        arch = oe.rust.arch_to_rust_arch(d.getVar('{}_ARCH'.format(thing)))
+        arch = d.getVar('{}_ARCH'.format(thing))
 
     # All the Yocto targets are Linux and are 'unknown'
     vendor = "-unknown"
@@ -90,9 +87,15 @@ def rust_base_triple(d, thing):
         libc = bb.utils.contains('TUNE_FEATURES', 'callconvention-hard', 'hf', '', d)
     return arch + vendor + '-' + os + libc
 
-
+# Required for Dunfell compatbility
 # In some cases uname and the toolchain differ on their idea of the arch name
-RUST_BUILD_ARCH = "${@oe.rust.arch_to_rust_arch(d.getVar('BUILD_ARCH'))}"
+RUST_BUILD_ARCH = "${@arch_to_rust_arch(d.getVar('BUILD_ARCH'))}"
+
+# Handle mismatches between `uname -m`-style output and Rust's arch names
+def arch_to_rust_arch(arch):
+    if arch == "ppc64le":
+        return "powerpc64le"
+    return arch
 
 # Naming explanation
 # Yocto
@@ -117,11 +120,8 @@ RUST_BUILD_ARCH = "${@oe.rust.arch_to_rust_arch(d.getVar('BUILD_ARCH'))}"
 # its likely best to not use the triple suffix due to potential confusion.
 
 RUST_BUILD_SYS = "${@rust_base_triple(d, 'BUILD')}"
-RUST_BUILD_SYS[vardepvalue] = "${RUST_BUILD_SYS}"
 RUST_HOST_SYS = "${@rust_base_triple(d, 'HOST')}"
-RUST_HOST_SYS[vardepvalue] = "${RUST_HOST_SYS}"
 RUST_TARGET_SYS = "${@rust_base_triple(d, 'TARGET')}"
-RUST_TARGET_SYS[vardepvalue] = "${RUST_TARGET_SYS}"
 
 # wrappers to get around the fact that Rust needs a single
 # binary but Yocto's compiler and linker commands have
@@ -143,12 +143,8 @@ create_wrapper () {
 	shift
 
 	cat <<- EOF > "${file}"
-	#!/usr/bin/env python3
-	import os, sys
-	orig_binary = "$@"
-	binary = orig_binary.split()[0]
-	args = orig_binary.split() + sys.argv[1:]
-	os.execvp(binary, args)
+	#!/bin/sh
+	exec $@ "\$@"
 	EOF
 	chmod +x "${file}"
 }
@@ -175,7 +171,7 @@ do_rust_create_wrappers () {
 	create_wrapper "${RUST_BUILD_AR}" "${BUILD_AR}"
 
 	# Yocto Target / Rust Target C compiler
-	create_wrapper "${RUST_TARGET_CC}" "${WRAPPER_TARGET_CC}" "${WRAPPER_TARGET_LDFLAGS}"
+	create_wrapper "${RUST_TARGET_CC}" "${WRAPPER_TARGET_CC}"
 	# Yocto Target / Rust Target C++ compiler
 	create_wrapper "${RUST_TARGET_CXX}" "${WRAPPER_TARGET_CXX}"
 	# Yocto Target / Rust Target linker
@@ -185,5 +181,5 @@ do_rust_create_wrappers () {
 
 }
 
-addtask rust_create_wrappers before do_configure after do_patch do_prepare_recipe_sysroot
+addtask rust_create_wrappers before do_configure after do_patch
 do_rust_create_wrappers[dirs] += "${WRAPPER_DIR}"
