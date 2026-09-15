@@ -67,6 +67,7 @@ PTESTS_FAST = "\
     lzo \
     m4 \
     nettle \
+    npth \
     opkg \
     popt \
     procps \
