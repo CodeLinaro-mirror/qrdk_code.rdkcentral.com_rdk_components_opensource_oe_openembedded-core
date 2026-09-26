@@ -58,11 +58,11 @@ do_configure:append:class-nativesdk() {
 }
 
 cpan_do_compile () {
-	oe_runmake PASTHRU_INC="${CFLAGS}" LD="${CCLD}"
+	oe_runmake PASTHRU_INC="${CFLAGS}" LD="${CCLD}" CONFIGDEP=
 }
 
 cpan_do_install () {
-	oe_runmake DESTDIR="${D}" install_vendor
+	oe_runmake DESTDIR="${D}" install_vendor CONFIGDEP=
 	for PERLSCRIPT in `grep -rIEl '#! *${bindir}/perl-native.*/perl' ${D}`; do
 		sed -i -e 's|${bindir}/perl-native.*/perl|/usr/bin/env nativeperl|' $PERLSCRIPT
 	done
