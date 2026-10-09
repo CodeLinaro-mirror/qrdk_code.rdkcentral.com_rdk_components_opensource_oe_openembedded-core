@@ -520,6 +520,7 @@ def package_extraction(d, test_suites):
 testimage_main[vardepsexclude] += "BB_ORIGENV DATETIME"
 
 python () {
-    if oe.types.boolean(d.getVar("TESTIMAGE_AUTO") or "False"):
+    if oe.types.boolean(d.getVar("TESTIMAGE_AUTO") or "False") and \
+      d.getVar('IMAGE_FSTYPES') != d.getVar('INITRAMFS_FSTYPES'):
         bb.build.addtask("testimage", "do_build", "do_image_complete", d)
 }
