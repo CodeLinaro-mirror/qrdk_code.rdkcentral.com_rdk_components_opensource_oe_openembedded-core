@@ -38,6 +38,11 @@ SKIP="$SKIP httpProxy-\*"
 SKIP="$SKIP mutex-condition-\*"
 # Timer-related tests are going to be fragile (16324)
 SKIP="$SKIP timer-\*"
+# RISC-V widens a negative float NaN to the positive canonical NaN, so the
+# sign check fails: https://core.tcl-lang.org/tcl/tktview/bf029ced86
+case "$(uname -m)" in
+riscv*) SKIP="$SKIP binary-40.3" ;;
+esac
 
 # Run all tests in tests/*.test unless tests are specified as arguments
 TESTS=${*:-tests/*.test}
